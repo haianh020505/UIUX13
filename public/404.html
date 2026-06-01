@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+      (function () {
+        const segmentCount = 1;
+        const l = window.location;
+        const basePath = '/' + l.pathname.split('/')[1] + '/';
+        const redirectPath =
+          basePath + '?/' + l.pathname.split('/').slice(1 + segmentCount).join('/');
+        const search = l.search.replace(/&/g, '~and~');
+        l.replace(l.protocol + '//' + l.host + redirectPath + search + l.hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
