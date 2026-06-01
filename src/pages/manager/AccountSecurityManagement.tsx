@@ -61,7 +61,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Hồ sơ cá nhân & Bảo mật</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Hồ sơ cá nhân & Bảo mật</h1>
 
       <div className="mb-5 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
         <div className="relative flex h-14 min-w-48 items-center justify-center px-5 text-sm font-extrabold text-brand">
@@ -72,7 +72,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
         <form onSubmit={saveProfile} className="rounded-xl border border-gray-100 bg-white shadow-sm">
-          <div className="flex items-start gap-4 border-b border-slate-100 px-6 py-5">
+          <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
               <UserRound size={22} />
             </div>
@@ -81,7 +81,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
               <p className="panel-subtitle">Cập nhật thông tin hiển thị trong hệ thống quản lý.</p>
             </div>
           </div>
-          <div className="space-y-5 p-6">
+          <div className="space-y-4 p-4">
             <Field label="Họ và Tên">
               <input className="form-input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
             </Field>
@@ -105,7 +105,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
               <p className="mt-1 text-xs font-semibold text-emerald-600">Tài khoản có quyền vận hành các module quản lý, báo cáo và điều phối.</p>
             </div>
           </div>
-          <div className="flex justify-end border-t border-slate-100 px-6 py-5">
+          <div className="flex justify-end border-t border-slate-100 px-4 py-3">
             <button type="submit" className="secondary-action">
               <Save size={16} />
               Lưu thay đổi
@@ -113,9 +113,9 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
           </div>
         </form>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <form onSubmit={savePassword} className="rounded-xl border border-gray-100 bg-white shadow-sm">
-            <div className="flex items-start gap-4 border-b border-slate-100 px-6 py-5">
+            <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
                 <KeyRound size={22} />
               </div>
@@ -124,7 +124,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
                 <p className="panel-subtitle">Mật khẩu mới cần tối thiểu 6 ký tự.</p>
               </div>
             </div>
-            <div className="space-y-5 p-6">
+            <div className="space-y-4 p-4">
               <PasswordField
                 label="Mật khẩu hiện tại"
                 value={currentPassword}
@@ -158,7 +158,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
                 <Toggle checked={twoFactorEnabled} onChange={() => setTwoFactorEnabled((value) => !value)} />
               </div>
             </div>
-            <div className="flex justify-end border-t border-slate-100 px-6 py-5">
+            <div className="flex justify-end border-t border-slate-100 px-4 py-3">
               <button type="submit" className="secondary-action disabled:cursor-not-allowed disabled:opacity-50" disabled={!canSubmitPassword}>
                 Cập nhật mật khẩu
               </button>
@@ -166,7 +166,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
           </form>
 
           <section className="rounded-xl border border-rose-200 bg-rose-50 shadow-sm">
-            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-rose-700">Đăng xuất khỏi hệ thống</h2>
                 <p className="mt-1 text-sm font-semibold text-rose-500">Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng.</p>

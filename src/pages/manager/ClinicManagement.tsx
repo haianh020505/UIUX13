@@ -160,7 +160,7 @@ export default function ClinicManagement({ activeTab, onTabChange, onNotify }: {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Quản lý phòng khám</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Quản lý phòng khám</h1>
       <ClinicTabs activeTab={activeTab} onTabChange={onTabChange} />
       <div className="mt-5">
         {activeTab === 'info' ? <ClinicInfo onNotify={onNotify} /> : null}
@@ -372,13 +372,13 @@ export function AddSpecialtyForm({
       <p className="text-sm font-semibold text-slate-500">
         Quản lý phòng khám / Danh mục chuyên khoa / <span className="text-brand">{specialty ? 'Chỉnh sửa' : 'Thêm mới'}</span>
       </p>
-      <h1 className="mt-2 border-l-4 border-brand pl-3 text-2xl font-extrabold text-slate-800">{specialty ? 'Chỉnh sửa Chuyên khoa' : 'Thêm mới Chuyên khoa'}</h1>
-      <section className="panel mt-6 p-0">
-        <div className="border-b border-slate-200 px-7 py-5">
+      <h1 className="mt-2 border-l-4 border-brand pl-3 text-xl font-bold text-slate-800">{specialty ? 'Chỉnh sửa Chuyên khoa' : 'Thêm mới Chuyên khoa'}</h1>
+      <section className="panel mt-4 p-0">
+        <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="panel-title">Thông tin chuyên khoa</h2>
         </div>
-        <div className="space-y-7 p-7">
-          <div className="grid gap-7 lg:grid-cols-2">
+        <div className="space-y-4 p-4">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Field label="Mã khoa *">
               <input className="form-input cursor-not-allowed bg-slate-100 text-slate-500" value={code ?? 'CK-05'} readOnly aria-readonly="true" />
               <p className="mt-2 text-xs font-medium text-slate-400">Mã khoa được tạo tự động bởi hệ thống.</p>
@@ -409,7 +409,7 @@ export function AddSpecialtyForm({
             <UploadArea label="Kéo thả hình ảnh vào đây, hoặc Chọn tệp" icon="upload" />
           </Field>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-200 px-7 py-5">
+        <div className="flex justify-end gap-3 border-t border-slate-200 px-4 py-3">
           <button type="button" onClick={onCancel} className="ghost-action">Hủy</button>
           <button type="submit" className="secondary-action">{specialty ? 'Lưu thay đổi' : 'Thêm chuyên khoa'}</button>
         </div>
@@ -507,12 +507,12 @@ function AddServiceForm({
       <p className="text-sm font-semibold text-slate-500">
         Quản lý phòng khám / Dịch vụ khám / <span className="text-brand">{service ? 'Chỉnh sửa' : 'Thêm mới'}</span>
       </p>
-      <h1 className="mt-2 border-l-4 border-brand pl-3 text-2xl font-extrabold text-slate-800">{service ? 'Chỉnh sửa Dịch vụ' : 'Thêm mới Dịch vụ'}</h1>
-      <section className="panel mt-6 p-0">
-        <div className="border-b border-slate-200 px-7 py-5">
+      <h1 className="mt-2 border-l-4 border-brand pl-3 text-xl font-bold text-slate-800">{service ? 'Chỉnh sửa Dịch vụ' : 'Thêm mới Dịch vụ'}</h1>
+      <section className="panel mt-4 p-0">
+        <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="panel-title">Thông tin dịch vụ</h2>
         </div>
-        <div className="grid gap-7 p-7 lg:grid-cols-2">
+        <div className="grid gap-4 p-4 lg:grid-cols-2">
           <Field label="Mã dịch vụ *">
             <input className="form-input cursor-not-allowed bg-slate-100 text-slate-500" value={code} readOnly aria-readonly="true" />
             <p className="mt-2 text-xs font-medium text-slate-400">Mã dịch vụ được tạo tự động bởi hệ thống.</p>
@@ -533,7 +533,7 @@ function AddServiceForm({
             <input className="form-input" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Nhập mô tả hiển thị dưới tên dịch vụ" />
           </Field>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-200 px-7 py-5">
+        <div className="flex justify-end gap-3 border-t border-slate-200 px-4 py-3">
           <button type="button" onClick={onCancel} className="ghost-action">Hủy</button>
           <button type="submit" className="secondary-action">{service ? 'Lưu thay đổi' : 'Thêm dịch vụ'}</button>
         </div>
@@ -724,7 +724,7 @@ function Modal({ title, children, onClose }: { title: string; children: ReactNod
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
       <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 className="panel-title">{title}</h2>
           <button type="button" onClick={onClose} className="icon-button" aria-label="Đóng">
             <X size={18} />

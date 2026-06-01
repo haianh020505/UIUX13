@@ -7,7 +7,7 @@ export default function ResponsiveTable({ columns, rows }: { columns: string[]; 
         <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
           <tr>
             {columns.map((column) => (
-              <th key={column} className="px-6 py-4">
+              <th key={column} className="px-4 py-3">
                 {column}
               </th>
             ))}
@@ -17,7 +17,7 @@ export default function ResponsiveTable({ columns, rows }: { columns: string[]; 
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex} className="bg-white">
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} className="px-6 py-5 align-middle text-slate-600">
+                <td key={cellIndex} className="px-4 py-3 align-middle text-slate-600">
                   {cell}
                 </td>
               ))}

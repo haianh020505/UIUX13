@@ -174,7 +174,7 @@ export default function StaffCoordinationManagement({ onNotify }: { onNotify?: (
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Lịch trực & Điều phối</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Lịch trực & Điều phối</h1>
       <StaffTabs activeTab={activeTab} onChange={setActiveTab} />
       <div className="mt-5">
         {activeTab === 'list' ? (
@@ -312,27 +312,27 @@ function StaffList({ staff, onReportAbsence }: { staff: Staff[]; onReportAbsence
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
             <tr>
-              <th className="px-6 py-4">Mã NS</th>
-              <th className="px-6 py-4">Họ và tên</th>
-              <th className="px-6 py-4">Ca trực hôm nay</th>
-              <th className="px-6 py-4">Vị trí</th>
-              <th className="px-6 py-4">Trạng thái</th>
-              <th className="px-6 py-4 text-right">Hành động</th>
+              <th className="px-4 py-3">Mã NS</th>
+              <th className="px-4 py-3">Họ và tên</th>
+              <th className="px-4 py-3">Ca trực hôm nay</th>
+              <th className="px-4 py-3">Vị trí</th>
+              <th className="px-4 py-3">Trạng thái</th>
+              <th className="px-4 py-3 text-right">Hành động</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {pagedStaff.map((item) => (
               <tr key={item.id} className="bg-white transition hover:bg-slate-50">
-                <td className="px-6 py-5 text-slate-600">{item.id}</td>
-                <td className="px-6 py-5 font-extrabold text-slate-800">{item.name}</td>
-                <td className="px-6 py-5 text-slate-600 font-semibold">
+                <td className="px-4 py-3 text-slate-600">{item.id}</td>
+                <td className="px-4 py-3 font-extrabold text-slate-800">{item.name}</td>
+                <td className="px-4 py-3 text-slate-600 font-semibold">
                   {getTodayShift(item)}
                 </td>
-                <td className="px-6 py-5 text-slate-600 font-semibold">
+                <td className="px-4 py-3 text-slate-600 font-semibold">
                   {getShiftLocation(item)}
                 </td>
-                <td className="px-6 py-5">{getCoordinationStatusBadge(item.status)}</td>
-                <td className="px-6 py-5">
+                <td className="px-4 py-3">{getCoordinationStatusBadge(item.status)}</td>
+                <td className="px-4 py-3">
                   <div className="flex justify-end">
                     <button
                       type="button"
@@ -404,7 +404,7 @@ function ScheduleTab({ staff, onNavigateToAlert }: { staff: Staff[]; onNavigateT
   };
 
   return (
-    <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <ScheduleDateNavigator view={view} anchorDate={anchorDate} onChange={setAnchorDate} />
         <ScheduleToggle value={view} onChange={setView} />
@@ -900,7 +900,7 @@ function ShiftDetailModal({ shift, onClose }: { shift: SelectedShift; onClose: (
     >
       <div className="w-full max-w-md animate-[modalIn_0.25s_ease-out] rounded-2xl bg-white shadow-2xl">
         {/* ── Header with gradient ── */}
-        <div className={`relative rounded-t-2xl bg-gradient-to-r ${shiftStyle.bg} px-6 py-5`}>
+        <div className={`relative rounded-t-2xl bg-gradient-to-r ${shiftStyle.bg} px-4 py-3`}>
           <button
             type="button"
             onClick={onClose}
@@ -910,20 +910,20 @@ function ShiftDetailModal({ shift, onClose }: { shift: SelectedShift; onClose: (
             <X size={18} />
           </button>
           <p className="text-sm font-semibold text-white/80">Chi tiết ca trực</p>
-          <p className="mt-1 text-xl font-extrabold text-white">
+          <p className="mt-1 text-lg font-bold text-white">
             {shiftStyle.icon} {tempLabel} · {tempLabel === 'Sáng' ? '08:00' : tempLabel === 'Chiều' ? '13:00' : tempLabel === 'Tối' ? '18:00' : shift.time}
           </p>
         </div>
 
         {/* ── Body ── */}
-        <div className="space-y-4 px-6 py-5">
+        <div className="space-y-4 px-4 py-3">
           {/* Staff info */}
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
               <UserRound size={24} />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-extrabold text-slate-800">{shift.staff.name}</p>
+              <p className="text-base font-bold text-slate-800">{shift.staff.name}</p>
               <p className="text-sm font-semibold text-slate-500">{shift.staff.role} · {shift.staff.specialty}</p>
             </div>
           </div>
@@ -1013,7 +1013,7 @@ function ShiftDetailModal({ shift, onClose }: { shift: SelectedShift; onClose: (
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-4 py-3">
           {isEditing ? (
             <>
               <button
@@ -1066,9 +1066,9 @@ function AlertsTab({ staff, selectedAlertId, onSelectAlert, onAssign }: { staff:
   const [confirmAssign, setConfirmAssign] = useState(false);
 
   return (
-    <section className="flex flex-row items-start gap-6 overflow-x-auto">
+    <section className="flex flex-row items-start gap-4 overflow-x-auto">
       <div className="flex w-1/3 min-w-72 flex-col gap-3 rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-4">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Danh sách cảnh báo</h2>
         </div>
         <div className="max-h-[520px] space-y-3 overflow-y-auto p-4">
@@ -1090,7 +1090,7 @@ function AlertsTab({ staff, selectedAlertId, onSelectAlert, onAssign }: { staff:
           })}
         </div>
       </div>
-      <div className="w-2/3 min-w-[520px] rounded-xl border bg-white p-6 shadow-sm">
+      <div className="w-2/3 min-w-[520px] rounded-xl border bg-white p-4 shadow-sm">
         <h2 className="panel-title">Chi tiết & Xử lý</h2>
         <div className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-4">
           <p className="flex items-center gap-2 font-extrabold text-rose-600"><AlertTriangle size={18} /> {selectedAlert.title}</p>

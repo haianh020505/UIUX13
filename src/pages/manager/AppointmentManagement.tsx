@@ -402,7 +402,7 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Quản lý lịch khám</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Quản lý lịch khám</h1>
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <AppointmentToolbar
           specialtyFilter={specialtyFilter}
@@ -560,7 +560,7 @@ function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (value: Vi
 
 function StatusFilterTabs({ active, counts, onChange }: { active: StatusFilter; counts: Record<StatusFilter, number>; onChange: (value: StatusFilter) => void }) {
   return (
-    <div className="flex flex-wrap gap-2 border-b border-slate-100 px-5 py-4">
+    <div className="flex flex-wrap gap-2 border-b border-slate-100 px-4 py-3">
       {statusTabs.map((tab) => {
         const isActive = active === tab.id;
         return (
@@ -600,11 +600,11 @@ function AppointmentTable({
       <table className="min-w-full text-left text-sm">
         <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
           <tr>
-            <th className="px-6 py-4">Khung giờ</th>
-            <th className="px-6 py-4">Bệnh nhân</th>
-            <th className="px-6 py-4">Chuyên khoa & Bác sĩ</th>
-            <th className="px-6 py-4">Trạng thái</th>
-            <th className="px-6 py-4 text-right">Thao tác</th>
+            <th className="px-4 py-3">Khung giờ</th>
+            <th className="px-4 py-3">Bệnh nhân</th>
+            <th className="px-4 py-3">Chuyên khoa & Bác sĩ</th>
+            <th className="px-4 py-3">Trạng thái</th>
+            <th className="px-4 py-3 text-right">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -635,7 +635,7 @@ function Pagination({
   const pages = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm font-semibold text-slate-500">
         Hiển thị {start}-{end} / {totalItems} lịch hẹn
       </p>
@@ -699,7 +699,7 @@ function ConfirmActionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-        <div className="border-b border-slate-200 px-5 py-4">
+        <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="text-base font-extrabold text-slate-800">{isConfirm ? 'Xác nhận lịch hẹn?' : 'Từ chối lịch hẹn?'}</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">
             {appointment.patient} - {appointment.time}, {appointment.date}
@@ -739,24 +739,24 @@ function TableGroup({
   return (
     <>
       <tr className="bg-gray-100">
-        <td colSpan={5} className="px-6 py-3 text-sm font-extrabold text-slate-700">
+        <td colSpan={5} className="px-4 py-2.5 text-sm font-extrabold text-slate-700">
           {formatGroupDate(group.date)}
         </td>
       </tr>
       {group.items.map((appointment) => (
         <tr key={appointment.id} onClick={() => onView(appointment.id)} className="cursor-pointer border-b border-slate-100 bg-white transition hover:bg-slate-50">
-          <td className="px-6 py-5 font-semibold text-slate-600">{appointment.time}</td>
-          <td className="px-6 py-5">
+          <td className="px-4 py-3 font-semibold text-slate-600">{appointment.time}</td>
+          <td className="px-4 py-3">
             <b className="text-slate-800">{appointment.patient}</b>
           </td>
-          <td className="px-6 py-5 text-slate-600">
+          <td className="px-4 py-3 text-slate-600">
             {appointment.specialty}
             <small className="block text-slate-400">{appointment.doctor}</small>
           </td>
-          <td className="px-6 py-5">
+          <td className="px-4 py-3">
             <AppointmentStatusBadge status={appointment.status} />
           </td>
-          <td className="px-6 py-5">
+          <td className="px-4 py-3">
             <QuickActions appointment={appointment} onView={onView} onConfirm={onConfirm} onReject={onReject} />
           </td>
         </tr>
@@ -849,9 +849,9 @@ function AppointmentDetailsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
       <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
+        <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-800">Chi tiết Lịch hẹn</h2>
+            <h2 className="text-base font-bold text-slate-800">Chi tiết Lịch hẹn</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">
               {appointment.id} - {appointment.date}
             </p>
@@ -860,7 +860,7 @@ function AppointmentDetailsModal({
             <X size={18} />
           </button>
         </div>
-        <div className="space-y-5 p-5">
+        <div className="space-y-4 p-5">
           <AppointmentStatusBadge status={appointment.status} />
           <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
             <h3 className="text-sm font-extrabold text-slate-800">Thông tin Bệnh nhân</h3>
@@ -889,7 +889,7 @@ function AppointmentDetailsModal({
             <p className="mt-2 rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700">{appointment.note || patient.note}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
           <button type="button" onClick={onClose} className="ghost-action sm:mr-auto">
             Đóng
           </button>
@@ -947,12 +947,12 @@ function AppointmentDetail({ appointment, onBack, onSave }: { appointment: Appoi
       <p className="text-sm font-semibold text-slate-500">
         Quản lý lịch khám / <span className="text-blue-500">Chi tiết</span>
       </p>
-      <h1 className="mt-2 border-l-4 border-blue-500 pl-3 text-2xl font-extrabold text-slate-800">{appointment.status === 'examining' ? 'Hồ sơ bệnh nhân' : 'Chi tiết Lịch hẹn'}</h1>
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="space-y-6 p-7">
+      <h1 className="mt-2 border-l-4 border-blue-500 pl-3 text-xl font-bold text-slate-800">{appointment.status === 'examining' ? 'Hồ sơ bệnh nhân' : 'Chi tiết Lịch hẹn'}</h1>
+      <section className="mt-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="space-y-4 p-4">
           <div>
             <AppointmentStatusBadge status={appointment.status} />
-            <h2 className="mt-4 text-xl font-extrabold text-slate-800">
+            <h2 className="mt-4 text-lg font-bold text-slate-800">
               {appointment.status === 'examining' ? `Hồ sơ bệnh nhân: ${appointment.patient}` : `Yêu cầu Đặt lịch: ${appointment.patient}`}
             </h2>
           </div>
@@ -989,7 +989,7 @@ function AppointmentDetail({ appointment, onBack, onSave }: { appointment: Appoi
             <textarea className="form-textarea" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Thêm ghi chú gửi bác sĩ..." />
           </Field>
         </div>
-        <div className="flex flex-col gap-4 border-t border-slate-200 px-7 py-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-4 border-t border-slate-200 px-4 py-3 xl:flex-row xl:items-center xl:justify-between">
           <p className="max-w-2xl text-xs font-semibold leading-5 text-slate-400">{getDetailHelperText(appointment.status)}</p>
           <div className="flex shrink-0 flex-wrap justify-end gap-3 sm:flex-nowrap">
             <button type="button" onClick={onBack} className="ghost-action min-w-28 whitespace-nowrap">Quay lại</button>

@@ -72,18 +72,18 @@ export default function ManagerApp() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f1f4f7] text-slate-700 lg:flex">
+    <main className="min-h-screen bg-[#f1f4f7] text-sm text-slate-700 lg:flex">
       {toast ? <Toast message={toast.message} /> : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-[72px] items-center gap-3 border-b border-slate-200 px-7">
+        <div className="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4">
           <LogoMark />
           <span className="text-sm font-semibold text-slate-500">Fakeeh Care Group</span>
         </div>
-        <nav className="space-y-2 px-5 py-6">
+        <nav className="space-y-1 px-3 py-4">
           {managerMenu.map((item) => {
             const Icon = item.icon;
             const active = item.id === page;
@@ -101,7 +101,7 @@ export default function ManagerApp() {
                 }}
                 className={`manager-nav-item ${active ? 'manager-nav-item-active' : ''}`}
               >
-                <Icon size={19} />
+                <Icon size={17} />
                 <span>{item.label}</span>
               </button>
             );
@@ -115,7 +115,7 @@ export default function ManagerApp() {
 
       <div className="min-w-0 flex-1">
         <ManagerHeader onOpenMenu={() => setMobileOpen(true)} onNotificationClick={openNotificationTarget} />
-        <section className="mx-auto max-w-[1180px] px-4 py-7 sm:px-7 lg:px-10">
+        <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
           {page === 'dashboard' ? <ManagerDashboard /> : null}
           {page === 'clinic' ? <ClinicManagement key={`clinic-${resetKey}`} activeTab={activeTab} onTabChange={openClinicTab} onNotify={notify} /> : null}
           {page === 'schedule' ? <AppointmentManagement key={`schedule-${resetKey}`} onNotify={notify} /> : null}
@@ -143,9 +143,9 @@ export default function ManagerApp() {
 
 function Toast({ message }: { message: string }) {
   return (
-    <div className="fixed right-5 top-5 z-[60] flex min-w-72 items-center gap-3 rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-700 shadow-xl">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-        <CheckCircle2 size={18} />
+    <div className="fixed right-4 top-4 z-[60] flex min-w-64 items-center gap-2.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-xl">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <CheckCircle2 size={16} />
       </span>
       <span>{message}</span>
     </div>
@@ -170,19 +170,19 @@ function ActionPanel({
   return (
     <section className="panel">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-brand">{icon}</div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-brand">{icon}</div>
         <div className="min-w-0">
-          <h1 className="text-2xl font-extrabold text-slate-800">{title}</h1>
-          <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">{subtitle}</p>
+          <h1 className="text-xl font-bold text-slate-800">{title}</h1>
+          <p className="mt-1 max-w-2xl text-sm font-medium text-slate-500">{subtitle}</p>
         </div>
       </div>
-      <div className="mt-7 grid gap-3 md:grid-cols-3">
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
         {actions.map((action, index) => (
           <button
             key={action}
             type="button"
             onClick={index === 0 ? onPrimary : index === 1 ? onSecondary : undefined}
-            className="flex min-h-24 items-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-brand hover:bg-white"
+            className="flex min-h-20 items-start gap-2.5 rounded-md border border-slate-200 bg-slate-50 p-3 text-left transition hover:border-brand hover:bg-white"
           >
             <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-500" size={18} />
             <span className="text-sm font-extrabold text-slate-700">{action}</span>

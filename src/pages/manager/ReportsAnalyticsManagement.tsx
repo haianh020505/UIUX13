@@ -40,7 +40,7 @@ export default function ReportsAnalyticsManagement({ onNotify }: { onNotify?: (m
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Báo cáo & Thống kê</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Báo cáo & Thống kê</h1>
       <ReportTabs activeTab={activeTab} onChange={setActiveTab} />
       <div className="mt-5">
         {activeTab === 'overview' ? <OverviewTab /> : null}
@@ -100,7 +100,7 @@ function OverviewTab() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white p-5 shadow-sm lg:flex-row lg:items-center">
         <div className="w-full lg:max-w-72">
           <SelectMenu value={period} options={Object.keys(periodMultipliers)} onChange={setPeriod} />
@@ -117,8 +117,8 @@ function OverviewTab() {
         <MetricCard label="Tổng Doanh thu (VNĐ)" value={totalRevenue.toLocaleString('vi-VN')} trend="+20%" trendTone="up" helper="so với kỳ trước" />
         <MetricCard label="Doanh thu TB / Lượt khám" value={averageRevenue.toLocaleString('vi-VN')} helper="Mức chi tiêu trung bình ổn định" />
       </div>
-      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="panel-title">Lượt khám & Doanh thu theo Chuyên khoa</h2>
             <p className="panel-subtitle">So sánh số lượt khám và doanh thu quy đổi theo từng chuyên khoa.</p>
@@ -165,11 +165,11 @@ function TriageTab() {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Tỉ lệ Hủy lịch</h2>
           <p className="panel-subtitle">Theo dõi các chuyên khoa có nguy cơ hủy lịch cao.</p>
         </div>
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           <div className="rounded-lg border border-rose-200 bg-rose-50 p-5">
             <p className="text-sm font-extrabold text-rose-700">Tỉ lệ hủy lịch</p>
             <div className="mt-3 flex items-end gap-3">
@@ -193,11 +193,11 @@ function TriageTab() {
       </section>
 
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Hiệu suất Triage của Chatbot AI</h2>
           <p className="panel-subtitle">Đánh giá khả năng tự xử lý và chuyển đúng chuyên khoa.</p>
         </div>
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-5">
             <p className="text-sm font-extrabold text-blue-700">Tỉ lệ Tự xử lý thành công</p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -260,11 +260,11 @@ function ExportTab({ onNotify }: { onNotify?: (message: string) => void }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Tùy chọn Xuất dữ liệu thủ công</h2>
           <p className="panel-subtitle">Chọn kỳ báo cáo và các nhóm chỉ số cần xuất.</p>
         </div>
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           <Field label="Chọn kỳ báo cáo">
             <SelectMenu value={range} options={['Từ ngày 01/05/2026 - Đến ngày 31/05/2026', 'Tuần này', 'Quý II/2026']} onChange={setRange} />
           </Field>
@@ -276,7 +276,7 @@ function ExportTab({ onNotify }: { onNotify?: (message: string) => void }) {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-5 sm:flex-row">
+        <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row">
           <button type="button" onClick={() => setConfirmExport('PDF')} className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-rose-500 px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-rose-600">
             <FileText size={17} />
             Xuất PDF
@@ -289,11 +289,11 @@ function ExportTab({ onNotify }: { onNotify?: (message: string) => void }) {
       </section>
 
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Báo cáo định kỳ (Email)</h2>
           <p className="panel-subtitle">Tự động gửi báo cáo cho quản trị viên.</p>
         </div>
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
             <span className="inline-flex items-center gap-2 text-sm font-extrabold text-slate-700">
               <Mail size={16} className="text-brand" />
@@ -308,7 +308,7 @@ function ExportTab({ onNotify }: { onNotify?: (message: string) => void }) {
             <SelectMenu value={schedule} options={['08:00 AM - Thứ 2 hằng tuần', '05:00 PM - Thứ 6 hằng tuần', '08:00 AM - Ngày 1 hằng tháng']} onChange={setSchedule} />
           </Field>
         </div>
-        <div className="flex justify-end border-t border-slate-100 px-6 py-5">
+        <div className="flex justify-end border-t border-slate-100 px-4 py-3">
           <button type="button" onClick={() => setConfirmSaveEmail(true)} className="secondary-action">
             <Save size={16} />
             Lưu lịch gửi

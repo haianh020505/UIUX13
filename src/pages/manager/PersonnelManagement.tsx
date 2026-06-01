@@ -75,11 +75,11 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800">Quản lý Hồ sơ Nhân sự</h1>
+          <h1 className="text-xl font-bold text-slate-800">Quản lý Hồ sơ Nhân sự</h1>
           <p className="mt-1 text-sm font-semibold text-slate-500">Quản lý thông tin hồ sơ gốc của đội ngũ y bác sĩ và nhân viên phòng khám</p>
         </div>
         <button
@@ -115,12 +115,12 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50/50 text-xs font-extrabold uppercase text-slate-500">
               <tr>
-                <th className="px-6 py-4">Mã NS</th>
-                <th className="px-6 py-4">Họ và tên</th>
-                <th className="px-6 py-4">Chức vụ</th>
-                <th className="px-6 py-4">Chuyên khoa</th>
-                <th className="px-6 py-4">Số điện thoại</th>
-                <th className="px-6 py-4 text-right">Hành động</th>
+                <th className="px-4 py-3">Mã NS</th>
+                <th className="px-4 py-3">Họ và tên</th>
+                <th className="px-4 py-3">Chức vụ</th>
+                <th className="px-4 py-3">Chuyên khoa</th>
+                <th className="px-4 py-3">Số điện thoại</th>
+                <th className="px-4 py-3 text-right">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -133,9 +133,9 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
               ) : (
                 pagedStaff.map((item) => (
                   <tr key={item.id} className="bg-white transition hover:bg-slate-50">
-                    <td className="px-6 py-5 font-semibold text-slate-600">{item.id}</td>
-                    <td className="px-6 py-5 font-extrabold text-slate-800">{item.name}</td>
-                    <td className="px-6 py-5 text-slate-600">
+                    <td className="px-4 py-3 font-semibold text-slate-600">{item.id}</td>
+                    <td className="px-4 py-3 font-extrabold text-slate-800">{item.name}</td>
+                    <td className="px-4 py-3 text-slate-600">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
                         item.role === 'Bác sĩ' ? 'bg-blue-50 text-blue-700' :
                         item.role === 'Điều dưỡng' ? 'bg-emerald-50 text-emerald-700' :
@@ -145,9 +145,9 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
                         {item.role}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-slate-600 font-semibold">{item.specialty}</td>
-                    <td className="px-6 py-5 font-semibold text-slate-600">{item.phone}</td>
-                    <td className="px-6 py-5">
+                    <td className="px-4 py-3 text-slate-600 font-semibold">{item.specialty}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-600">{item.phone}</td>
+                    <td className="px-4 py-3">
                       <div className="flex justify-end gap-3">
                         <button
                           type="button"
@@ -292,7 +292,7 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
     >
       <div className="w-full max-w-2xl animate-[modalIn_0.25s_ease-out] rounded-2xl bg-white shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
           <h2 className="text-lg font-bold text-slate-800">Thông tin cá nhân & Công việc</h2>
           <button
             type="button"
@@ -306,7 +306,7 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
 
         {/* Form Body */}
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-6 p-6 md:grid-cols-2">
+          <div className="grid gap-4 p-4 md:grid-cols-2">
             <Field label="Mã nhân sự">
               <input
                 type="text"
@@ -374,7 +374,7 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-4 py-3">
             <button
               type="button"
               onClick={onClose}

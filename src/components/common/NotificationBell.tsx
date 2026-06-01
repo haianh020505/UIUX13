@@ -79,18 +79,18 @@ export default function NotificationBell({ onNotificationClick }: { onNotificati
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`relative flex h-11 w-11 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition hover:border-brand hover:text-brand ${
+        className={`relative flex h-9 w-9 items-center justify-center rounded-full border bg-white text-slate-500 shadow-sm transition hover:border-brand hover:text-brand ${
           open ? 'border-brand text-brand ring-4 ring-brand/10' : 'border-slate-200'
         }`}
         aria-label="Thông báo"
         aria-expanded={open}
       >
-        <Bell size={19} />
-        {!readAll ? <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-rose-500" /> : null}
+        <Bell size={17} />
+        {!readAll ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-rose-500" /> : null}
       </button>
       {open ? (
-        <div className="absolute right-0 top-14 z-30 w-[340px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="absolute right-0 top-12 z-30 w-[320px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
             <div>
               <h3 className="text-sm font-extrabold text-slate-800">Thông báo</h3>
               <p className="text-xs font-semibold text-slate-400">{readAll ? 'Không còn mục mới chưa đọc' : `${notifications.length} mục mới cần xử lý`}</p>
@@ -104,14 +104,14 @@ export default function NotificationBell({ onNotificationClick }: { onNotificati
               <button
                 key={item.id}
                 type="button"
-                className="flex w-full gap-3 px-4 py-3 text-left transition hover:bg-slate-50 focus:bg-sky-50 focus:outline-none"
+                className="flex w-full gap-2.5 px-3 py-2.5 text-left transition hover:bg-slate-50 focus:bg-sky-50 focus:outline-none"
                 onClick={() => {
                   onNotificationClick?.(item.id as NotificationTarget);
                   setOpen(false);
                 }}
               >
-                <span className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
-                  <Bell size={16} />
+                <span className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
+                  <Bell size={14} />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-extrabold text-slate-800">{item.title}</span>

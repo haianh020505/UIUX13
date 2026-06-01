@@ -24,9 +24,9 @@ export default function ManagerDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800">Dashboard</h1>
+          <h1 className="text-xl font-bold text-slate-800">Dashboard</h1>
           <p className="mt-1 text-sm text-slate-500">Tổng quan hoạt động phòng khám hôm nay</p>
         </div>
         <button type="button" className="secondary-action">
@@ -35,25 +35,25 @@ export default function ManagerDashboard() {
         </button>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={CircleUserRound} tint="bg-sky-100 text-sky-600" accent="from-sky-500/14 to-cyan-400/5" label="Lượt bệnh nhân" hint="Tổng số đến khám" value="142" trend="+12%" progress={72} sparkline={[18, 24, 22, 31, 28, 36, 34]} />
         <MetricCard icon={CircleDollarSign} tint="bg-emerald-100 text-emerald-600" accent="from-emerald-500/14 to-teal-400/5" label="Doanh thu ước tính" hint="Hôm nay" value="48,5M" suffix="VNĐ" trend="+8%" progress={64} sparkline={[22, 20, 26, 25, 33, 31, 38]} />
         <MetricCard icon={UserPlus} tint="bg-amber-100 text-amber-600" accent="from-amber-400/18 to-orange-300/5" label="Bệnh nhân mới" hint="Lần đầu đến khám" value="34" trend="+5 ca" progress={48} sparkline={[12, 16, 14, 18, 20, 19, 24]} />
         <MetricCard icon={Star} tint="bg-violet-100 text-violet-600" accent="from-violet-500/14 to-fuchsia-400/5" label="Đánh giá CSAT" hint="Mức độ hài lòng" value="4.8" suffix="/5.0" trend="+0.2" progress={96} sparkline={[34, 35, 36, 35, 37, 38, 39]} />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_360px]">
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_320px]">
         <section className="panel">
           <h2 className="panel-title">Lưu lượng bệnh nhân theo khung giờ</h2>
           <p className="panel-subtitle">Giúp phân bổ nhân sự y tá, lễ tân hợp lý</p>
-          <div className="mt-4 h-48">
+          <div className="mt-4 h-44">
             <PatientFlowChart />
           </div>
         </section>
         <section className="panel">
           <h2 className="panel-title">Tình hình Nhân sự</h2>
           <p className="panel-subtitle">Thống kê ca trực hôm nay</p>
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-3">
             <StaffStatus icon={UserCheck} label="Bác sĩ đang trực" value="08" tone="sky" />
             <StaffStatus icon={UsersRound} label="Điều dưỡng & Y tá" value="12" tone="emerald" />
             <StaffStatus icon={XCircle} label="Xin nghỉ / Vắng mặt" value="02" tone="rose" />
@@ -61,15 +61,15 @@ export default function ManagerDashboard() {
         </section>
       </div>
 
-      <section className="panel mt-6 overflow-hidden p-0">
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="panel mt-4 overflow-hidden p-0">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="panel-title">Danh sách phân công Ca trực (Hôm nay)</h2>
-            <p className="mt-1 text-sm font-medium text-slate-400">
+            <p className="mt-1 text-xs font-medium text-slate-400">
               {filteredShiftRows.length} / {shiftRows.length} nhân sự phù hợp
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {activeFilters.map((filterId) => {
               const filter = shiftFilters.find((item) => item.id === filterId);
               if (!filter) return null;

@@ -21,7 +21,7 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
       <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-4 py-3">
           <div className="flex gap-3">
             <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone === 'danger' ? 'bg-rose-50 text-rose-500' : 'bg-sky-50 text-brand'}`}>
               <AlertTriangle size={18} />
@@ -35,8 +35,8 @@ export default function ConfirmDialog({
             <X size={18} />
           </button>
         </div>
-        {children ? <div className="border-b border-slate-100 px-5 py-4">{children}</div> : null}
-        <div className="flex justify-end gap-3 px-5 py-4">
+        {children ? <div className="border-b border-slate-100 px-4 py-3">{children}</div> : null}
+        <div className="flex justify-end gap-3 px-4 py-3">
           <button type="button" onClick={onCancel} className="ghost-action">
             Hủy
           </button>

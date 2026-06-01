@@ -97,7 +97,7 @@ export default function NotificationReminderManagement({ onNotify }: { onNotify?
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">{activeTab === 'manual' ? 'Gửi thông báo' : activeTab === 'config' ? 'Cấu hình & Template' : 'Lịch sử gửi thông báo'}</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">{activeTab === 'manual' ? 'Gửi thông báo' : activeTab === 'config' ? 'Cấu hình & Template' : 'Lịch sử gửi thông báo'}</h1>
       <NotificationTabs activeTab={activeTab} onChange={setActiveTab} />
       <div className="mt-5">
         {activeTab === 'config' ? (
@@ -180,11 +180,11 @@ function ConfigTab({
   return (
     <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Cấu hình nhắc lịch tự động</h2>
           <p className="panel-subtitle">Thiết lập thời điểm, kênh gửi và chuyên khoa được bật nhắc lịch.</p>
         </div>
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 p-4">
           <div>
             <p className="mb-3 text-sm font-extrabold text-slate-700">Thời điểm gửi trước giờ khám</p>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -226,7 +226,7 @@ function ConfigTab({
             </div>
           </div>
         </div>
-        <div className="flex justify-end border-t border-slate-100 px-6 py-5">
+        <div className="flex justify-end border-t border-slate-100 px-4 py-3">
           <button type="button" onClick={() => setConfirmSaveConfig(true)} className="secondary-action">
             <Save size={16} />
             Lưu cấu hình
@@ -235,7 +235,7 @@ function ConfigTab({
       </section>
 
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <div>
             <h2 className="panel-title">Quản lý Template</h2>
             <p className="panel-subtitle">Mẫu tin nhắn dùng cho SMS và Email.</p>
@@ -245,7 +245,7 @@ function ConfigTab({
             Thêm mẫu
           </button>
         </div>
-        <div className="space-y-3 p-6">
+        <div className="space-y-3 p-4">
           {templates.map((template) => (
             <article key={template.id} className="rounded-lg border border-slate-100 bg-slate-50 p-4 transition hover:border-brand/40 hover:bg-sky-50/50">
               <div className="flex items-start justify-between gap-3">
@@ -381,11 +381,11 @@ function ManualNotificationTab({ templates, selectedTemplateId, onNotify }: { te
   return (
     <form onSubmit={submit} className="grid gap-5 lg:grid-cols-[1fr_360px]">
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">Soạn thông báo</h2>
           <p className="panel-subtitle">Gửi SMS/Email theo nhóm bệnh nhân đã chọn.</p>
         </div>
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           <Field label="Chọn nhóm người nhận">
             <SelectMenu value={recipientGroup} options={recipientGroups} onChange={setRecipientGroup} />
             <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
@@ -431,7 +431,7 @@ function ManualNotificationTab({ templates, selectedTemplateId, onNotify }: { te
             <SelectMenu value={sendTime} options={['Gửi ngay lập tức', 'Đặt lịch gửi sau 30 phút', 'Đặt lịch gửi cuối ngày']} onChange={setSendTime} />
           </Field>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+        <div className="flex justify-end gap-3 border-t border-slate-100 px-4 py-3">
           <button type="button" onClick={resetForm} className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-gray-50 px-5 text-sm font-extrabold text-slate-600 transition hover:bg-white">
             Làm mới
           </button>
@@ -442,10 +442,10 @@ function ManualNotificationTab({ templates, selectedTemplateId, onNotify }: { te
         </div>
       </section>
 
-      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
         <h2 className="panel-title">Xem trước</h2>
         <p className="panel-subtitle">SMS Preview</p>
-        <div className="mx-auto mt-6 w-full max-w-64 rounded-[2rem] bg-slate-900 p-3 shadow-xl">
+        <div className="mx-auto mt-4 w-full max-w-64 rounded-[2rem] bg-slate-900 p-3 shadow-xl">
           <div className="min-h-[360px] rounded-[1.5rem] bg-white p-4">
             <div className="rounded-lg bg-slate-100 p-3">
               <p className="text-xs font-extrabold text-slate-800">FAKEEH CARE</p>
@@ -496,7 +496,7 @@ function RecipientListModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-lg">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="text-base font-extrabold text-slate-800">Danh sách người nhận</h2>
           <button type="button" onClick={onClose} className="icon-button h-9 w-9" aria-label="Đóng danh sách người nhận">
             <X size={18} />
@@ -606,29 +606,29 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
             <tr>
-              <th className="px-6 py-4">Thời gian</th>
-              <th className="px-6 py-4">Người nhận</th>
-              <th className="px-6 py-4">Nội dung</th>
-              <th className="px-6 py-4">Kênh</th>
-              <th className="px-6 py-4">Trạng thái</th>
-              <th className="px-6 py-4 text-right">Thao tác</th>
+              <th className="px-4 py-3">Thời gian</th>
+              <th className="px-4 py-3">Người nhận</th>
+              <th className="px-4 py-3">Nội dung</th>
+              <th className="px-4 py-3">Kênh</th>
+              <th className="px-4 py-3">Trạng thái</th>
+              <th className="px-4 py-3 text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {pagedHistory.map((item) => (
               <tr key={item.id} className="bg-white transition hover:bg-slate-50">
-                <td className="whitespace-nowrap px-6 py-5 font-semibold text-slate-500">{item.time}</td>
-                <td className="px-6 py-5">
+                <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-500">{item.time}</td>
+                <td className="px-4 py-3">
                   <p className="font-extrabold text-slate-800">{item.recipient}</p>
                   <p className="text-xs font-semibold text-slate-400">{item.phone}</p>
                 </td>
-                <td className="max-w-md px-6 py-5 font-medium text-slate-500">{item.content}</td>
-                <td className="px-6 py-5 font-bold text-slate-600">{item.channel}</td>
-                <td className="px-6 py-5">
+                <td className="max-w-md px-4 py-3 font-medium text-slate-500">{item.content}</td>
+                <td className="px-4 py-3 font-bold text-slate-600">{item.channel}</td>
+                <td className="px-4 py-3">
                   <HistoryStatusBadge status={item.status} />
                   {item.status === 'failed' ? <p className="mt-1 text-xs font-semibold text-red-500">{item.errorReason ?? 'Hết hạn mức SMS'}</p> : null}
                 </td>
-                <td className="px-6 py-5 text-right">
+                <td className="px-4 py-3 text-right">
                   {item.status === 'failed' ? (
                     <button type="button" onClick={() => setResendItem(item)} className="filter-button">
                       Gửi lại
@@ -642,7 +642,7 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-4 text-sm font-semibold text-slate-500 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 text-sm font-semibold text-slate-500 lg:flex-row lg:items-center lg:justify-between">
         <span>Hiển thị {pagedHistory.length} trên tổng số {filteredHistory.length} thông báo</span>
         <div className="flex items-center gap-3">
           <span className="hidden items-center gap-2 xl:inline-flex"><Clock3 size={16} /> Cập nhật gần nhất: 10/05/2026 10:30</span>
@@ -717,11 +717,11 @@ function TemplateForm({ template, onCancel, onSave }: { template: Template | nul
         }}
         className="w-full max-w-2xl rounded-xl bg-white shadow-xl"
       >
-        <div className="border-b border-slate-100 px-6 py-5">
+        <div className="border-b border-slate-100 px-4 py-3">
           <h2 className="panel-title">{template ? 'Chỉnh sửa template' : 'Thêm template mới'}</h2>
           <p className="panel-subtitle">Có thể dùng biến động: {'{ten_bn}'}, {'{gio_hen}'}, {'{ngay_hen}'}, {'{phong_kham}'}.</p>
         </div>
-        <div className="grid gap-5 p-6 md:grid-cols-2">
+        <div className="grid gap-5 p-4 md:grid-cols-2">
           <Field label="Tên template">
             <input className="form-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Nhập tên template..." />
           </Field>
@@ -732,7 +732,7 @@ function TemplateForm({ template, onCancel, onSave }: { template: Template | nul
             <textarea className="form-textarea min-h-40" value={content} onChange={(event) => setContent(event.target.value)} placeholder="Nhập nội dung template..." />
           </Field>
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+        <div className="flex justify-end gap-3 border-t border-slate-100 px-4 py-3">
           <button type="button" onClick={onCancel} className="ghost-action">Hủy</button>
           <button type="submit" className="secondary-action">Lưu template</button>
         </div>

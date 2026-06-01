@@ -404,7 +404,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-extrabold text-slate-800">Hồ sơ bệnh nhân</h1>
+      <h1 className="mb-4 text-xl font-bold text-slate-800">Hồ sơ bệnh nhân</h1>
       <section className="panel flex min-h-[620px] flex-col p-0">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="grid flex-1 gap-3 md:grid-cols-[minmax(260px,1fr)_220px_190px]">
@@ -529,8 +529,8 @@ function PatientDetail({ patient, onBack, onSave }: { patient: Patient; onBack: 
         Quay lại danh sách
       </button>
       <p className="text-sm font-semibold text-slate-500">Hồ sơ bệnh nhân / Danh sách / Chi tiết</p>
-      <h1 className="mt-2 text-2xl font-extrabold text-slate-800">BN. {patient.name} ({patient.id})</h1>
-      <div className="mt-6 overflow-x-auto rounded-md border border-slate-200 bg-white">
+      <h1 className="mt-2 text-xl font-bold text-slate-800">BN. {patient.name} ({patient.id})</h1>
+      <div className="mt-4 overflow-x-auto rounded-md border border-slate-200 bg-white">
         <div className="flex min-w-[560px]">
           {[
             ['profile', 'Thông tin cá nhân'],
@@ -572,10 +572,10 @@ function ProfileTab({ patient, onSave }: { patient: Patient; onSave: (patient: P
 
   return (
     <form onSubmit={submit} className="panel p-0">
-      <div className="border-b border-slate-200 px-7 py-5">
+      <div className="border-b border-slate-200 px-4 py-3">
         <h2 className="panel-title">Thông tin định danh</h2>
       </div>
-      <div className="grid gap-6 p-7 lg:grid-cols-2">
+      <div className="grid gap-4 p-4 lg:grid-cols-2">
         <Field label="Họ và Tên">
           <input className="form-input" value={form.name} onChange={(event) => updateField('name', event.target.value)} />
         </Field>
@@ -601,7 +601,7 @@ function ProfileTab({ patient, onSave }: { patient: Patient; onSave: (patient: P
           <input className="form-input" value={form.emergencyContact} onChange={(event) => updateField('emergencyContact', event.target.value)} />
         </Field>
       </div>
-      <div className="flex items-center justify-end gap-4 border-t border-slate-200 px-7 py-5">
+      <div className="flex items-center justify-end gap-4 border-t border-slate-200 px-4 py-3">
         <button type="submit" className="secondary-action">Lưu thay đổi</button>
       </div>
       {confirmSave ? (
@@ -624,7 +624,7 @@ function VisitsTab({ visits }: { visits: Visit[] }) {
   return (
     <section className="panel min-h-[520px]">
       <h2 className="panel-title">Các lần khám trước đây</h2>
-      <div className="mt-7 space-y-5 border-l-2 border-dashed border-slate-200 pl-6">
+      <div className="mt-7 space-y-4 border-l-2 border-dashed border-slate-200 pl-6">
         {visits.map((visit, index) => (
           <div key={`${visit.date}-${visit.specialty}`} className="relative">
             <span className={`absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full ${index === 0 ? 'bg-brand' : 'bg-slate-300'}`} />
@@ -660,14 +660,14 @@ function ChatbotTab({ chats }: { chats: ChatSession[] }) {
 
   return (
     <section className="panel min-h-[520px] p-0">
-      <div className="flex flex-col gap-4 border-b border-slate-200 px-7 py-5 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 border-b border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between">
         <h2 className="panel-title">Lịch sử tương tác với AI</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectMenu value={timeFilter} options={chatTimeFilters} onChange={setTimeFilter} />
           <SelectMenu value={resultFilter} options={chatResultFilters} onChange={setResultFilter} />
         </div>
       </div>
-      <div className="space-y-4 p-7">
+      <div className="space-y-4 p-4">
         {filteredChats.map((chat) => (
           <div key={chat.id} className={`rounded-md border border-slate-200 bg-white p-4 ${chat.result === 'transferred' ? 'border-l-4 border-l-brand' : chat.result === 'self-care' ? 'border-l-4 border-l-emerald-500' : ''}`}>
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-center">
@@ -730,7 +730,7 @@ function ChatModal({ chat, onClose }: { chat: ChatSession; onClose: () => void }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
       <div className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 className="panel-title">Đoạn chat {chat.date}</h2>
             <p className="mt-1 text-xs font-semibold text-slate-400">{chat.resultText}</p>
