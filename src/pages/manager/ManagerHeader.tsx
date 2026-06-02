@@ -1,7 +1,15 @@
-import { CalendarDays, CircleUserRound, Menu } from 'lucide-react';
+import { CalendarDays, CircleUserRound, LogOut, Menu } from 'lucide-react';
 import NotificationBell, { type NotificationTarget } from '../../components/common/NotificationBell';
 
-export default function ManagerHeader({ onOpenMenu, onNotificationClick }: { onOpenMenu: () => void; onNotificationClick: (target: NotificationTarget) => void }) {
+export default function ManagerHeader({
+  onOpenMenu,
+  onNotificationClick,
+  onLogout,
+}: {
+  onOpenMenu: () => void;
+  onNotificationClick: (target: NotificationTarget) => void;
+  onLogout: () => void;
+}) {
   const today = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
     day: '2-digit',
@@ -42,6 +50,15 @@ export default function ManagerHeader({ onOpenMenu, onNotificationClick }: { onO
             <p className="text-xs font-semibold text-slate-400">Quản lý phòng khám</p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="icon-button hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+          aria-label="Đăng xuất"
+          title="Đăng xuất"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   );

@@ -70,7 +70,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+      <div className="grid items-start gap-5 xl:grid-cols-[1fr_1fr]">
         <form onSubmit={saveProfile} className="rounded-xl border border-gray-100 bg-white shadow-sm">
           <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
@@ -113,8 +113,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
           </div>
         </form>
 
-        <div className="space-y-4">
-          <form onSubmit={savePassword} className="rounded-xl border border-gray-100 bg-white shadow-sm">
+        <form onSubmit={savePassword} className="rounded-xl border border-gray-100 bg-white shadow-sm">
             <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
                 <KeyRound size={22} />
@@ -163,22 +162,21 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
                 Cập nhật mật khẩu
               </button>
             </div>
-          </form>
-
-          <section className="rounded-xl border border-rose-200 bg-rose-50 shadow-sm">
-            <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-base font-extrabold text-rose-700">Đăng xuất khỏi hệ thống</h2>
-                <p className="mt-1 text-sm font-semibold text-rose-500">Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng.</p>
-              </div>
-              <button type="button" onClick={() => setConfirmAction('logout')} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-rose-500 px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-rose-600">
-                <LogOut size={16} />
-                Đăng xuất
-              </button>
-            </div>
-          </section>
-        </div>
+        </form>
       </div>
+
+      <section className="mt-5 rounded-xl border border-rose-200 bg-rose-50 shadow-sm">
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-extrabold text-rose-700">Đăng xuất khỏi hệ thống</h2>
+            <p className="mt-1 text-sm font-semibold text-rose-500">Bạn sẽ cần đăng nhập lại để tiếp tục sử dụng.</p>
+          </div>
+          <button type="button" onClick={() => setConfirmAction('logout')} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-rose-500 px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-rose-600">
+            <LogOut size={16} />
+            Đăng xuất
+          </button>
+        </div>
+      </section>
 
       {confirmAction === 'profile' ? (
         <ConfirmDialog

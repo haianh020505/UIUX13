@@ -847,9 +847,9 @@ function AppointmentDetailsModal({
   const patient = patientProfiles[appointment.patient] ?? { age: 32, phone: '0900.000.000', note: 'Bệnh nhân chưa để lại ghi chú thêm.' };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 py-4 sm:items-center">
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+        <div className="shrink-0 flex items-start justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 className="text-base font-bold text-slate-800">Chi tiết Lịch hẹn</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">
@@ -860,7 +860,7 @@ function AppointmentDetailsModal({
             <X size={18} />
           </button>
         </div>
-        <div className="space-y-4 p-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
           <AppointmentStatusBadge status={appointment.status} />
           <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
             <h3 className="text-sm font-extrabold text-slate-800">Thông tin Bệnh nhân</h3>
@@ -889,7 +889,7 @@ function AppointmentDetailsModal({
             <p className="mt-2 rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-700">{appointment.note || patient.note}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
           <button type="button" onClick={onClose} className="ghost-action sm:mr-auto">
             Đóng
           </button>

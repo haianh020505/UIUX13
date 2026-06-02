@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { CheckCircle2, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import LogoMark from '../../components/common/LogoMark';
 import type { NotificationTarget } from '../../components/common/NotificationBell';
 import AccountSecurityManagement from './AccountSecurityManagement';
 import AppointmentManagement from './AppointmentManagement';
 import ClinicManagement from './ClinicManagement';
+import ConfirmDialog from './components/ConfirmDialog';
 import ManagerDashboard from './ManagerDashboard';
 import ManagerHeader from './ManagerHeader';
 import NotificationReminderManagement from './NotificationReminderManagement';
@@ -17,11 +19,13 @@ import { managerMenu } from './data';
 import type { ClinicTab, ManagerPage } from './types';
 
 export default function ManagerApp() {
+  const navigate = useNavigate();
   const [page, setPage] = useState<ManagerPage>('dashboard');
   const [activeTab, setActiveTab] = useState<ClinicTab>('info');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const notify = (message: string) => {
     setToast({ id: Date.now(), message });
@@ -71,18 +75,42 @@ export default function ManagerApp() {
     setMobileOpen(false);
   };
 
+  const logout = () => {
+    localStorage.removeItem('triageai_user');
+    setConfirmLogout(false);
+    navigate('/');
+  };
+
   return (
     <main className="min-h-screen bg-[#f1f4f7] text-sm text-slate-700 lg:flex">
       {toast ? <Toast message={toast.message} /> : null}
+      {confirmLogout ? (
+        <ConfirmDialog
+          title="Đăng xuất khỏi hệ thống?"
+          message="Phiên làm việc hiện tại sẽ kết thúc và bạn cần đăng nhập lại."
+          confirmText="Đăng xuất"
+          tone="danger"
+          onCancel={() => setConfirmLogout(false)}
+          onConfirm={logout}
+        />
+      ) : null}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4">
+        <button
+          type="button"
+          onClick={() => {
+            setPage('dashboard');
+            setMobileOpen(false);
+          }}
+          className="flex h-14 w-full items-center gap-2.5 border-b border-slate-200 px-4 text-left transition hover:bg-slate-50"
+          aria-label="Về Dashboard"
+        >
           <LogoMark />
           <span className="text-sm font-semibold text-slate-500">Fakeeh Care Group</span>
-        </div>
+        </button>
         <nav className="space-y-1 px-3 py-4">
           {managerMenu.map((item) => {
             const Icon = item.icon;
@@ -114,7 +142,7 @@ export default function ManagerApp() {
       ) : null}
 
       <div className="min-w-0 flex-1">
-        <ManagerHeader onOpenMenu={() => setMobileOpen(true)} onNotificationClick={openNotificationTarget} />
+        <ManagerHeader onOpenMenu={() => setMobileOpen(true)} onNotificationClick={openNotificationTarget} onLogout={() => setConfirmLogout(true)} />
         <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
           {page === 'dashboard' ? <ManagerDashboard /> : null}
           {page === 'clinic' ? <ClinicManagement key={`clinic-${resetKey}`} activeTab={activeTab} onTabChange={openClinicTab} onNotify={notify} /> : null}
