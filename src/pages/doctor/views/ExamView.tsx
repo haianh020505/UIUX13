@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AlertTriangle, Check, ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import { labResults } from '../data';
 import type { Appointment, Patient } from '../types';
 
@@ -57,7 +56,7 @@ export default function ExamView({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <button type="button" onClick={onBack} className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-brand active:scale-[0.98]">
-              <ChevronLeft size={16} /> Quay lại Tổng quan
+              Quay lại Tổng quan
             </button>
             <h2 className="text-xl font-bold text-slate-900">{patient.name}</h2>
             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -68,7 +67,7 @@ export default function ExamView({
             </p>
           </div>
           <button type="button" onClick={onFinish} className="secondary-action self-start cursor-pointer active:scale-[0.98]">
-            Kết thúc khám <Check size={16} />
+            Kết thúc khám
           </button>
         </div>
       </section>
@@ -77,7 +76,6 @@ export default function ExamView({
         <div className="space-y-4">
           <article className="rounded-lg border border-sky-100 bg-sky-50 p-4 shadow-sm">
             <div className="mb-2 flex items-center gap-2 text-sm font-bold text-brand">
-              <AlertTriangle size={16} />
               AI Summary
             </div>
             <details open>
@@ -116,7 +114,6 @@ export default function ExamView({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-bold text-slate-800">{item.title}</p>
                     <span className={`rounded px-2 py-0.5 text-xs font-bold ${item.status === 'Đang chờ KQ' ? 'bg-amber-100 text-amber-700' : item.status === 'Mới' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'}`}>
-                      {item.status === 'Đang chờ KQ' ? '⌛ ' : null}
                       {item.status}
                     </span>
                   </div>
@@ -133,7 +130,7 @@ export default function ExamView({
             <h3 className="panel-title">Chỉ định</h3>
             <textarea className="form-textarea mt-3 min-h-28" value={orderText} onChange={(event) => setOrderText(event.target.value)} placeholder="Nhập chỉ định xét nghiệm, chẩn đoán hình ảnh..." />
             <button type="button" onClick={addOrder} className="secondary-action mt-3 cursor-pointer active:scale-[0.98]">
-              <Plus size={15} /> Thêm chỉ định
+              Thêm chỉ định
             </button>
           </article>
 
@@ -142,15 +139,15 @@ export default function ExamView({
             <div className="mt-3 flex gap-2">
               <input className="form-input" value={medicationText} onChange={(event) => setMedicationText(event.target.value)} placeholder="Tên thuốc, liều dùng..." />
               <button type="button" onClick={addMedication} className="secondary-action shrink-0 cursor-pointer active:scale-[0.98]">
-                <Plus size={15} />
+                Thêm
               </button>
             </div>
             <div className="mt-3 space-y-2">
               {medications.map((item) => (
                 <div key={item} className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                   <span className="text-sm font-medium text-slate-700">{item}</span>
-                  <button type="button" onClick={() => removeMedication(item)} className="icon-button h-8 w-8 shrink-0 text-rose-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" aria-label="Xóa thuốc">
-                    <Trash2 size={14} />
+                  <button type="button" onClick={() => removeMedication(item)} className="shrink-0 rounded-md px-3 py-1.5 text-xs font-bold text-rose-500 transition hover:bg-rose-50 hover:text-rose-600">
+                    Xóa
                   </button>
                 </div>
               ))}

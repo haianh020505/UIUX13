@@ -1,34 +1,40 @@
-import { Search } from 'lucide-react';
 import type { AppointmentStatus } from '../types';
 
-export function SearchInput({ placeholder, onClick }: { placeholder: string; onClick?: () => void }) {
+export function SearchInput({
+  placeholder,
+  onClick,
+  value,
+  onChange,
+  className = '',
+}: {
+  placeholder: string;
+  onClick?: () => void;
+  value?: string;
+  onChange?: (value: string) => void;
+  className?: string;
+}) {
   return (
-    <label className="relative block w-full max-w-md cursor-text">
-      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-      <input onFocus={onClick} className="form-input bg-white pl-9" placeholder={placeholder} />
+    <label className={`relative block w-full max-w-md cursor-text ${className}`}>
+      <input
+        value={value}
+        onChange={(event) => onChange?.(event.target.value)}
+        onFocus={onClick}
+        className="form-input bg-white"
+        placeholder={placeholder}
+      />
     </label>
   );
 }
 
 export function StatusPill({ status }: { status: AppointmentStatus }) {
   const styles = {
-    'Đã khám': 'bg-slate-100 text-slate-500',
-    'Đang chờ': 'bg-amber-100 text-amber-700',
-    'Đang khám': 'bg-sky-100 text-brand',
-    'Sắp đến': 'bg-emerald-100 text-emerald-700',
-    'Đang chờ KQ': 'bg-amber-100 text-amber-700',
-  };
-  const icons = {
-    'Đã khám': '✓',
-    'Đang chờ': '⏳',
-    'Đang khám': '',
-    'Sắp đến': '',
-    'Đang chờ KQ': '⌛',
+    'Đã khám': 'status-pill--done',
+    'Đang chờ': 'status-pill--waiting',
+    'Đang khám': 'status-pill--examining',
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[status]}`}>
-      {icons[status] ? <span aria-hidden="true">{icons[status]}</span> : null}
+    <span className={`status-pill ${styles[status]}`}>
       {status}
     </span>
   );

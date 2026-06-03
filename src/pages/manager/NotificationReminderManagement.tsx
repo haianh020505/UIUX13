@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronDown, Clock3, Edit3, Mail, Plus, Save, Search, Send, Smartphone, Trash2, X, XCircle } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock3, Edit3, Mail, Plus, Save, Search, Send, Smartphone, Trash2, X, XCircle } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
@@ -435,7 +435,7 @@ function ManualNotificationTab({ templates, selectedTemplateId, onNotify }: { te
           <button type="button" onClick={resetForm} className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-gray-50 px-5 text-sm font-extrabold text-slate-600 transition hover:bg-white">
             Làm mới
           </button>
-          <button type="submit" className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-500 px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-blue-600">
+          <button type="submit" className="secondary-action">
             <Send size={16} />
             Gửi thông báo
           </button>
@@ -494,7 +494,7 @@ function RecipientListModal({
   const selectedCount = recipients.filter((recipient) => recipient.selected).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="text-base font-extrabold text-slate-800">Danh sách người nhận</h2>
@@ -525,7 +525,7 @@ function RecipientListModal({
           <span className="text-sm font-semibold text-slate-600">
             Đã chọn: <strong className="text-blue-600">{selectedCount}</strong> / {recipients.length}
           </span>
-          <button type="button" onClick={onClose} className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-blue-600">
+          <button type="button" onClick={onClose} className="rounded-lg bg-brand px-4 py-2 text-sm font-extrabold text-white transition hover:bg-[#1f7fb9]">
             Xong
           </button>
         </div>
@@ -642,40 +642,41 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 text-sm font-semibold text-slate-500 lg:flex-row lg:items-center lg:justify-between">
-        <span>Hiển thị {pagedHistory.length} trên tổng số {filteredHistory.length} thông báo</span>
+      <div className="flex items-center justify-between border-t border-slate-100 p-4">
+        <p className="text-sm font-semibold text-slate-500">
+          Hiển thị {pagedHistory.length} trên tổng số {filteredHistory.length} thông báo
+        </p>
         <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-2 xl:inline-flex"><Clock3 size={16} /> Cập nhật gần nhất: 10/05/2026 10:30</span>
-          <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={page === 1}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-sky-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Trang trước"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
             <button
+              key={pageNumber}
               type="button"
-              disabled={page === 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-extrabold text-slate-600 transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setPage(pageNumber)}
+              className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-extrabold transition ${
+                page === pageNumber ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
+              }`}
             >
-              Trước
+              {pageNumber}
             </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-              <button
-                key={pageNumber}
-                type="button"
-                onClick={() => setPage(pageNumber)}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-xs font-extrabold transition ${
-                  page === pageNumber ? 'bg-blue-500 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-brand hover:text-brand'
-                }`}
-              >
-                {pageNumber}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={page === totalPages}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-              className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-extrabold text-slate-600 transition hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Sau
-            </button>
-          </div>
+          ))}
+          <button
+            type="button"
+            disabled={page === totalPages}
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-sky-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Trang sau"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
       </div>
       {resendItem ? (
@@ -709,7 +710,7 @@ function TemplateForm({ template, onCancel, onSave }: { template: Template | nul
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
       <form
         onSubmit={(event) => {
           event.preventDefault();

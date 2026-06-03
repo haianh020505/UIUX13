@@ -1,7 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 
-const notifications = [
+export type NotificationItem = {
+  id: NotificationTarget;
+  title: string;
+  description: string;
+  time: string;
+  tone: string;
+  targetLabel: string;
+  patientId?: string;
+  targetPath?: string;
+  targetTab?: string;
+};
+
+const defaultNotifications: NotificationItem[] = [
   {
     id: 'new-appointments',
     title: 'Có 3 lịch khám chờ xác nhận',
@@ -52,12 +64,29 @@ const notifications = [
   },
 ];
 
-export type NotificationTarget = 'new-appointments' | 'staff-shortage' | 'review-reply' | 'patient-record-update' | 'notification-failed' | 'report-ready';
+export type NotificationTarget =
+  | 'new-appointments'
+  | 'staff-shortage'
+  | 'review-reply'
+  | 'patient-record-update'
+  | 'notification-failed'
+  | 'report-ready'
+  | 'doctor-lab-new'
+  | 'doctor-triage-risk'
+  | 'doctor-consultation'
+  | 'doctor-record-updated';
 
-export default function NotificationBell({ onNotificationClick }: { onNotificationClick?: (target: NotificationTarget) => void }) {
+export default function NotificationBell({
+  notifications = defaultNotifications,
+  onNotificationClick,
+}: {
+  notifications?: NotificationItem[];
+  onNotificationClick?: (notification: NotificationItem) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [readAll, setReadAll] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState<NotificationTarget[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const unreadCount = notifications.filter((item) => !readNotificationIds.includes(item.id)).length;
 
   useEffect(() => {
     if (!open) {
@@ -71,7 +100,17 @@ export default function NotificationBell({ onNotificationClick }: { onNotificati
     };
 
     document.addEventListener('mousedown', closeOnOutsideClick);
-    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
   }, [open]);
 
   return (
@@ -86,16 +125,16 @@ export default function NotificationBell({ onNotificationClick }: { onNotificati
         aria-expanded={open}
       >
         <Bell size={17} />
-        {!readAll ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-rose-500" /> : null}
+        {unreadCount > 0 ? <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" /> : null}
       </button>
       {open ? (
         <div className="absolute right-0 top-12 z-30 w-[320px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
           <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
             <div>
               <h3 className="text-sm font-extrabold text-slate-800">Thông báo</h3>
-              <p className="text-xs font-semibold text-slate-400">{readAll ? 'Không còn mục mới chưa đọc' : `${notifications.length} mục mới cần xử lý`}</p>
+              <p className="text-xs font-semibold text-slate-400">{unreadCount === 0 ? 'Không còn mục mới chưa đọc' : `${unreadCount} mục mới cần xử lý`}</p>
             </div>
-            <button type="button" onClick={() => setReadAll(true)} className="text-xs font-extrabold text-brand transition hover:text-[#1f7fb9]">
+            <button type="button" onClick={() => setReadNotificationIds(notifications.map((item) => item.id))} className="text-xs font-extrabold text-brand transition hover:text-[#1f7fb9]">
               Đánh dấu đã đọc tất cả
             </button>
           </div>
@@ -104,9 +143,12 @@ export default function NotificationBell({ onNotificationClick }: { onNotificati
               <button
                 key={item.id}
                 type="button"
-                className="flex w-full gap-2.5 px-3 py-2.5 text-left transition hover:bg-slate-50 focus:bg-sky-50 focus:outline-none"
+                className={`flex w-full gap-2.5 px-3 py-2.5 text-left transition hover:bg-slate-50 focus:bg-sky-50 focus:outline-none ${
+                  readNotificationIds.includes(item.id) ? 'bg-slate-50/50 opacity-75' : ''
+                }`}
                 onClick={() => {
-                  onNotificationClick?.(item.id as NotificationTarget);
+                  setReadNotificationIds((current) => (current.includes(item.id) ? current : [...current, item.id]));
+                  onNotificationClick?.(item);
                   setOpen(false);
                 }}
               >

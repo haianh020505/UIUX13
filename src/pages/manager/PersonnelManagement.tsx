@@ -1,5 +1,6 @@
 import { useState, FormEvent, useEffect } from 'react';
-import { Search, Plus, Edit3, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { mockStaff } from '../../data/clinicMock';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
 
@@ -38,25 +39,34 @@ const initialStaff: Staff[] = [
   { id: 'ST-218', name: 'ĐD. Hồ Minh Tâm', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0906.888.111', email: 'tamhm@fakeeh.care' },
 ];
 
+const standardizedStaff: Staff[] = mockStaff.map((item) => ({
+  id: item.id,
+  name: item.name,
+  role: item.role,
+  specialty: item.specialty,
+  phone: item.phone,
+  email: item.email,
+}));
+
 function nextStaffCode(staffList: Staff[]) {
   const max = staffList.reduce((value, item) => Math.max(value, Number(item.id.replace('ST-', '')) || 0), 0);
   return `ST-${String(max + 1).padStart(3, '0')}`;
 }
 
 export default function PersonnelManagement({ onNotify }: { onNotify?: (message: string) => void }) {
-  const [staff, setStaff] = useState<Staff[]>(initialStaff);
+  const [staff, setStaff] = useState<Staff[]>(standardizedStaff);
   const [query, setQuery] = useState('');
   const [editingStaff, setEditingStaff] = useState<Staff | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Staff | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const totalStaffCount = 45; // Fixed as requested: "Hiển thị 1-10 trên tổng số 45"
-
   // Search filter
   const filteredStaff = staff.filter((item) => {
     const keyword = query.trim().toLowerCase();
     return !keyword || [item.id, item.name, item.phone, item.specialty, item.role].some((val) => val.toLowerCase().includes(keyword));
   });
+
+  const totalStaffCount = filteredStaff.length;
 
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
   const pagedStaff = filteredStaff.slice((page - 1) * pageSize, page * pageSize);
@@ -85,7 +95,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
         <button
           type="button"
           onClick={() => setEditingStaff('new')}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-500 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600 focus:outline-none"
+          className="secondary-action"
         >
           <Plus size={16} />
           Thêm nhân sự mới
@@ -152,18 +162,18 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
                         <button
                           type="button"
                           onClick={() => setEditingStaff(item)}
-                          className="text-slate-400 transition hover:text-blue-600"
+                          className="text-emerald-500 transition hover:text-emerald-600"
                           aria-label={`Sửa ${item.name}`}
                         >
-                          <Edit3 size={19} strokeWidth={2.4} />
+                          <Pencil size={18} />
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(item)}
-                          className="text-slate-400 transition hover:text-red-500"
+                          className="text-rose-500 transition hover:text-rose-600"
                           aria-label={`Xóa ${item.name}`}
                         >
-                          <Trash2 size={19} strokeWidth={2.4} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
@@ -195,7 +205,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
                 type="button"
                 onClick={() => setPage(pageNum)}
                 className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-bold transition ${
-                  page === pageNum ? 'bg-blue-500 text-white shadow-sm' : 'text-blue-500 hover:bg-slate-50'
+                  page === pageNum ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
                 }`}
               >
                 {pageNum}
@@ -256,6 +266,7 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
   const [specialty, setSpecialty] = useState(staff?.specialty ?? specialties[0]);
   const [phone, setPhone] = useState(staff?.phone ?? '');
   const [email, setEmail] = useState(staff?.email ?? '');
+  const [error, setError] = useState('');
   const isEdit = staff !== null;
 
   // Escape to close
@@ -268,13 +279,14 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Vui lòng nhập Họ và Tên');
+      setError('Vui lòng nhập Họ và Tên');
       return;
     }
     if (!phone.trim()) {
-      alert('Vui lòng nhập Số điện thoại');
+      setError('Vui lòng nhập Số điện thoại');
       return;
     }
+    setError('');
     onSave({
       id: code,
       name: name.trim(),
@@ -306,6 +318,9 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
 
         {/* Form Body */}
         <form onSubmit={handleSubmit}>
+          {error ? (
+            <div className="mx-4 mt-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600">{error}</div>
+          ) : null}
           <div className="grid gap-4 p-4 md:grid-cols-2">
             <Field label="Mã nhân sự">
               <input
@@ -384,7 +399,7 @@ function PersonnelFormModal({ code, staff, onClose, onSave }: PersonnelFormModal
             </button>
             <button
               type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1f7fb9]"
             >
               Lưu thông tin
             </button>

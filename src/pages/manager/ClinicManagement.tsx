@@ -318,7 +318,7 @@ function SpecialtyList({
   const visibleSpecialties = specialties.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) || item.id.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <section className="panel min-h-[560px] border-2 border-brand p-0">
+    <section className="panel p-0">
       <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
         <SearchBox placeholder="Tìm kiếm chuyên khoa..." value={query} onChange={setQuery} />
         <button type="button" onClick={onAdd} className="secondary-action">
@@ -438,7 +438,7 @@ function ServiceList({ services, onAdd, onEdit, onDelete }: { services: Service[
   const visibleServices = services.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) || item.specialty.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <section className="panel min-h-[430px] p-0">
+    <section className="panel p-0">
       <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
         <SearchBox placeholder="Tìm kiếm dịch vụ..." value={query} onChange={setQuery} />
         <button type="button" onClick={onAdd} className="secondary-action">
@@ -573,7 +573,7 @@ function ReviewList({ reviews, specialties, onChange, onNotify }: { reviews: Rev
   };
 
   return (
-    <section className="panel min-h-[470px] p-0">
+    <section className="panel p-0">
       <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row">
         <SelectMenu buttonClassName="filter-button min-w-48 justify-between" value={stars} options={starOptions} onChange={setStars} />
         <SelectMenu buttonClassName="filter-button min-w-52 justify-between" value={specialty} options={specialtyOptions} onChange={setSpecialty} />
@@ -722,7 +722,7 @@ function TableActions({ hidden, onEdit, onToggle, onDelete }: { hidden: boolean;
 
 function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 className="panel-title">{title}</h2>

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LogoMark from '../../components/common/LogoMark';
-import type { NotificationTarget } from '../../components/common/NotificationBell';
+import type { NotificationItem } from '../../components/common/NotificationBell';
 import AccountSecurityManagement from './AccountSecurityManagement';
 import AppointmentManagement from './AppointmentManagement';
 import ClinicManagement from './ClinicManagement';
@@ -46,7 +46,9 @@ export default function ManagerApp() {
     setMobileOpen(false);
   };
 
-  const openNotificationTarget = (target: NotificationTarget) => {
+  const openNotificationTarget = (notification: NotificationItem) => {
+    const target = notification.id;
+
     if (target === 'new-appointments') {
       setPage('schedule');
     }
@@ -81,6 +83,20 @@ export default function ManagerApp() {
     navigate('/');
   };
 
+  const openStaffSchedule = () => {
+    setPage('staff');
+    setResetKey((current) => current + 1);
+    setMobileOpen(false);
+  };
+
+  const openAccount = () => {
+    setPage('account');
+    setResetKey((current) => current + 1);
+    setMobileOpen(false);
+  };
+
+  const activeLabel = managerMenu.find((item) => item.id === page)?.label ?? 'Dashboard';
+
   return (
     <main className="min-h-screen bg-[#f1f4f7] text-sm text-slate-700 lg:flex">
       {toast ? <Toast message={toast.message} /> : null}
@@ -95,7 +111,7 @@ export default function ManagerApp() {
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -111,7 +127,7 @@ export default function ManagerApp() {
           <LogoMark />
           <span className="text-sm font-semibold text-slate-500">Fakeeh Care Group</span>
         </button>
-        <nav className="space-y-1 px-3 py-4">
+        <nav className="space-y-1 overflow-y-auto px-3 py-4" style={{ maxHeight: 'calc(100vh - 3.5rem)' }}>
           {managerMenu.map((item) => {
             const Icon = item.icon;
             const active = item.id === page;
@@ -142,9 +158,15 @@ export default function ManagerApp() {
       ) : null}
 
       <div className="min-w-0 flex-1">
-        <ManagerHeader onOpenMenu={() => setMobileOpen(true)} onNotificationClick={openNotificationTarget} onLogout={() => setConfirmLogout(true)} />
+        <ManagerHeader
+          activeLabel={activeLabel}
+          onOpenMenu={() => setMobileOpen(true)}
+          onNotificationClick={openNotificationTarget}
+          onLogout={() => setConfirmLogout(true)}
+          onOpenAccount={openAccount}
+        />
         <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
-          {page === 'dashboard' ? <ManagerDashboard /> : null}
+          {page === 'dashboard' ? <ManagerDashboard onOpenStaffSchedule={openStaffSchedule} /> : null}
           {page === 'clinic' ? <ClinicManagement key={`clinic-${resetKey}`} activeTab={activeTab} onTabChange={openClinicTab} onNotify={notify} /> : null}
           {page === 'schedule' ? <AppointmentManagement key={`schedule-${resetKey}`} onNotify={notify} /> : null}
           {page === 'records' ? <PatientRecordsManagement key={`records-${resetKey}`} onNotify={notify} /> : null}
@@ -171,8 +193,13 @@ export default function ManagerApp() {
 
 function Toast({ message }: { message: string }) {
   return (
-    <div className="fixed right-4 top-4 z-[60] flex min-w-64 items-center gap-2.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-xl">
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+    <div
+      className="fixed right-4 top-4 z-[60] flex min-w-64 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold shadow-xl"
+      style={{ background: 'var(--color-success)', color: 'var(--color-on-success)' }}
+      role="status"
+      aria-live="polite"
+    >
+      <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: 'var(--color-success-light)', color: 'var(--color-success)' }}>
         <CheckCircle2 size={16} />
       </span>
       <span>{message}</span>

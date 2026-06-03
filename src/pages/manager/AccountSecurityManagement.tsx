@@ -17,7 +17,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
   const [currentPassword, setCurrentPassword] = useState('Admin@123456');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(true);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
@@ -70,8 +70,8 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
         </div>
       </div>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[1fr_1fr]">
-        <form onSubmit={saveProfile} className="rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="grid items-stretch gap-5 xl:grid-cols-[1fr_1fr]">
+        <form onSubmit={saveProfile} className="flex h-full flex-col rounded-xl border border-gray-100 bg-white shadow-sm">
           <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
               <UserRound size={22} />
@@ -81,7 +81,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
               <p className="panel-subtitle">Cập nhật thông tin hiển thị trong hệ thống quản lý.</p>
             </div>
           </div>
-          <div className="space-y-4 p-4">
+          <div className="flex-1 space-y-4 p-4">
             <Field label="Họ và Tên">
               <input className="form-input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
             </Field>
@@ -113,7 +113,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
           </div>
         </form>
 
-        <form onSubmit={savePassword} className="rounded-xl border border-gray-100 bg-white shadow-sm">
+        <form onSubmit={savePassword} className="flex h-full flex-col rounded-xl border border-gray-100 bg-white shadow-sm">
             <div className="flex items-start gap-4 border-b border-slate-100 px-4 py-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-brand">
                 <KeyRound size={22} />
@@ -123,7 +123,7 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
                 <p className="panel-subtitle">Mật khẩu mới cần tối thiểu 6 ký tự.</p>
               </div>
             </div>
-            <div className="space-y-4 p-4">
+            <div className="flex-1 space-y-4 p-4">
               <PasswordField
                 label="Mật khẩu hiện tại"
                 value={currentPassword}

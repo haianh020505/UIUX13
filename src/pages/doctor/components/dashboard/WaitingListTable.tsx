@@ -1,56 +1,128 @@
+import { forwardRef } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { getPatient } from '../../data';
 import type { Appointment } from '../../types';
 import { StatusPill } from '../shared';
 
-export default function WaitingListTable({ appointments, onCall, onOpenRecord }: { appointments: Appointment[]; onCall: (appointment: Appointment) => void; onOpenRecord: (code: string) => void }) {
-  const firstWaitingIndex = appointments.findIndex((appointment) => appointment.status === 'Đang chờ');
+type WaitingListTab = 'all' | 'waiting' | 'urgent' | 'delayed' | 'done';
+
+type WaitingListTableProps = {
+  appointments: Appointment[];
+  activePatientId: string | null;
+  activeTab: WaitingListTab;
+  onTabChange: (tab: WaitingListTab) => void;
+  onCall: (appointment: Appointment) => void;
+  onOpenRecord: (code: string) => void;
+  onOpenActiveExam: () => void;
+};
+
+const WaitingListTable = forwardRef<HTMLElement, WaitingListTableProps>(function WaitingListTable(
+  { appointments, activePatientId, activeTab, onTabChange, onCall, onOpenRecord, onOpenActiveExam },
+  ref,
+) {
+  const urgentCount = appointments.filter((a) => a.triageFlag).length;
+  const waitingCount = appointments.filter((a) => a.status === 'Đang chờ' || a.status === 'Đang khám').length;
+  const delayedCount = appointments.filter((a) => a.status === 'Đang chờ' && a.waitMinutes > 15).length;
+  const doneCount = appointments.filter((a) => a.status === 'Đã khám').length;
+  const displayedAppointments =
+    activeTab === 'urgent'
+      ? appointments.filter((a) => a.triageFlag)
+      : activeTab === 'waiting'
+        ? appointments.filter((a) => a.status === 'Đang chờ' || a.status === 'Đang khám')
+        : activeTab === 'delayed'
+          ? appointments.filter((a) => a.status === 'Đang chờ' && a.waitMinutes > 15)
+          : activeTab === 'done'
+            ? appointments.filter((a) => a.status === 'Đã khám')
+            : appointments;
+  const firstWaitingIndex = displayedAppointments.findIndex((a) => a.status === 'Đang chờ');
+  const tabs: Array<{ id: WaitingListTab; label: string; count: number }> = [
+    { id: 'all', label: 'Tất cả', count: appointments.length },
+    { id: 'waiting', label: 'Đang chờ', count: waitingCount },
+    { id: 'urgent', label: 'Khẩn cấp', count: urgentCount },
+    { id: 'delayed', label: 'Chờ lâu', count: delayedCount },
+    { id: 'done', label: 'Đã khám', count: doneCount },
+  ];
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+    <section ref={ref} className="doctor-panel">
+      <div className="waiting-table-header">
         <div>
-          <h3 className="panel-title">Danh sách chờ khám</h3>
-          <p className="panel-subtitle">Ca sáng, ưu tiên bệnh nhân có cảnh báo triage</p>
+          <h3 className="panel-title">Danh sách ca khám hôm nay</h3>
+          <p className="panel-subtitle">Ưu tiên nguy cơ cao và bệnh nhân chờ lâu</p>
         </div>
-        <button type="button" className="filter-button cursor-pointer active:scale-[0.98]">Cập nhật hàng đợi</button>
+        <div className="waiting-table-actions">
+          <div className="waiting-tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onTabChange(tab.id)}
+                className={`waiting-tab ${activeTab === tab.id ? tab.id === 'urgent' ? 'waiting-tab--urgent-active' : 'waiting-tab--active' : ''}`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+          <button type="button" className="doctor-link-button">Xem tất cả</button>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase text-slate-500">
+      <div className="waiting-table-scroll">
+        <table className="waiting-table waiting-table--fit">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Khung giờ</th>
-              <th className="px-4 py-3">Bệnh nhân</th>
-              <th className="px-4 py-3">Tóm tắt triệu chứng</th>
-              <th className="px-4 py-3">Trạng thái</th>
-              <th className="px-4 py-3 text-right">Thao tác</th>
+              <th>Giờ</th>
+              <th>Bệnh nhân</th>
+              <th>Triệu chứng</th>
+              <th>Trạng thái</th>
+              <th className="text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {appointments.map((row, index) => {
+          <tbody>
+            {displayedAppointments.map((row, index) => {
               const patient = getPatient(row.patientCode);
+              const isActivePatient = row.id === activePatientId;
               const waiting = row.status === 'Đang chờ';
               const firstWaiting = waiting && index === firstWaitingIndex;
+              const waitLabel = row.waitMinutes > 0 ? `Chờ ${row.waitMinutes} phút` : null;
               return (
-                <tr key={row.id} className={firstWaiting ? 'bg-sky-50/70' : 'bg-white'}>
-                  <td className={`px-4 py-3 font-bold ${firstWaiting ? 'border-l-4 border-brand text-slate-900' : 'text-slate-500'}`}>{row.time}</td>
-                  <td className="px-4 py-3 font-bold text-slate-800">{patient.name}</td>
-                  <td className="max-w-md px-4 py-3 leading-5 text-slate-500">{row.summary}</td>
-                  <td className="px-4 py-3"><StatusPill status={row.status} /></td>
-                  <td className="px-4 py-3 text-right">
-                    {waiting ? (
-                      <button
-                        type="button"
-                        onClick={() => onCall(row)}
-                        className={`rounded-md px-3 py-1.5 text-xs transition active:scale-[0.98] ${
-                          firstWaiting
-                            ? 'bg-blue-500 font-medium text-white hover:bg-blue-600'
-                            : 'border border-blue-500 bg-transparent font-bold text-blue-500 hover:bg-blue-50'
-                        }`}
-                      >
+                <tr key={row.id} className={isActivePatient ? 'waiting-row--active' : firstWaiting ? 'waiting-row--next' : undefined}>
+                  <td className={`waiting-row-marker ${isActivePatient ? 'waiting-row-marker--active' : firstWaiting ? 'waiting-row-marker--next' : ''}`}>{row.time}</td>
+                  <td>
+                    <div className="waiting-patient-cell">
+                      <span className="waiting-patient-name">
+                        {patient.name}
+                        {row.triageFlag ? (
+                          <span className={`waiting-risk-badge ${row.riskLevel === 'Khẩn cấp' ? 'waiting-risk-badge--critical' : 'waiting-risk-badge--warning'}`} title={row.riskReason ?? ''}>
+                            <AlertTriangle size={11} />
+                            {row.riskLevel ?? 'Cần xem sớm'}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="waiting-patient-sub">
+                        {patient.age} tuổi · {patient.gender}
+                        {waitLabel ? ` · ${waitLabel}` : ''}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="symptom-cell" title={row.summary}>{row.summary}</div>
+                  </td>
+                  <td><StatusPill status={row.status} /></td>
+                  <td className="text-right">
+                    {isActivePatient ? (
+                      <button type="button" onClick={onOpenActiveExam} className="btn-secondary-compact">
+                        Tiếp tục khám
+                      </button>
+                    ) : waiting && firstWaiting ? (
+                      <button type="button" onClick={() => onCall(row)} className="btn-primary-compact">
                         Gọi vào khám
                       </button>
+                    ) : waiting && row.triageFlag ? (
+                      <button type="button" onClick={() => onCall(row)} className="btn-secondary-danger">
+                        Ưu tiên khám
+                      </button>
                     ) : (
-                      <button type="button" onClick={() => onOpenRecord(patient.code)} className="rounded-md px-3 py-1.5 text-xs font-bold text-gray-500 transition hover:bg-gray-100 hover:text-blue-500 active:scale-[0.98]">
+                      <button type="button" onClick={() => onOpenRecord(patient.code)} className="btn-secondary-compact">
                         Xem hồ sơ
                       </button>
                     )}
@@ -58,9 +130,18 @@ export default function WaitingListTable({ appointments, onCall, onOpenRecord }:
                 </tr>
               );
             })}
+            {!displayedAppointments.length ? (
+              <tr>
+                <td colSpan={5} className="table-empty">
+                  Không có ca nào trong nhóm này.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
     </section>
   );
-}
+});
+
+export default WaitingListTable;

@@ -1,32 +1,120 @@
-import { Bell, Menu, Stethoscope, UserRound } from 'lucide-react';
+import { CalendarDays, CircleUserRound, DoorOpen, LogOut, Menu, Stethoscope } from 'lucide-react';
+import NotificationBell, { type NotificationItem } from '../../../components/common/NotificationBell';
 
-export default function DoctorHeader({ title, onOpenMenu }: { title: string; onOpenMenu: () => void }) {
+const doctorNotifications: NotificationItem[] = [
+  {
+    id: 'doctor-lab-new',
+    title: 'Có kết quả CLS mới',
+    description: 'Nguyễn Thị Hoa (PA-020) đã có kết quả nội soi Tai Mũi Họng cần xem.',
+    time: '5 phút trước',
+    tone: 'bg-sky-100 text-sky-600',
+    targetLabel: 'Kết quả cận lâm sàng',
+    patientId: 'PA-020',
+    targetPath: '/emr',
+    targetTab: 'lab-results',
+  },
+  {
+    id: 'doctor-triage-risk',
+    title: 'Bệnh nhân nguy cơ cao đang chờ',
+    description: 'Lê Nguyễn Công Minh có cảnh báo triage trong hàng chờ khám.',
+    time: '12 phút trước',
+    tone: 'bg-rose-100 text-rose-600',
+    targetLabel: 'Danh sách chờ khám',
+    targetPath: '/dashboard',
+  },
+  {
+    id: 'doctor-consultation',
+    title: 'Có yêu cầu tư vấn mới',
+    description: 'Bệnh nhân gửi câu hỏi về triệu chứng ù tai và chóng mặt sau khám.',
+    time: '28 phút trước',
+    tone: 'bg-amber-100 text-amber-600',
+    targetLabel: 'Tư vấn trực tiếp',
+    targetPath: '/consultation',
+  },
+  {
+    id: 'doctor-record-updated',
+    title: 'Hồ sơ bệnh nhân vừa cập nhật',
+    description: 'PA-015 được bổ sung tiền sử hen suyễn và dị ứng thuốc.',
+    time: '45 phút trước',
+    tone: 'bg-emerald-100 text-emerald-600',
+    targetLabel: 'Hồ sơ bệnh nhân',
+    patientId: 'PA-015',
+    targetPath: '/emr',
+    targetTab: 'visits',
+  },
+];
+
+export default function DoctorHeader({
+  title,
+  onOpenMenu,
+  onNotificationClick,
+  onLogout,
+  onOpenAccount,
+}: {
+  title: string;
+  onOpenMenu: () => void;
+  onNotificationClick: (notification: NotificationItem) => void;
+  onLogout: () => void;
+  onOpenAccount: () => void;
+}) {
+  const today = new Intl.DateTimeFormat('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date());
+
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
-      <div className="flex min-w-0 items-center gap-3">
-        <button type="button" onClick={onOpenMenu} className="icon-button cursor-pointer active:scale-95 lg:hidden" aria-label="Mở menu">
-          <Menu size={18} />
-        </button>
-        <div className="hidden min-w-0 lg:block">
-          <p className="text-xs font-medium text-slate-400">Vai trò bác sĩ</p>
-          <h1 className="truncate text-base font-bold text-slate-800">{title}</h1>
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
+      <button type="button" onClick={onOpenMenu} className="icon-button cursor-pointer active:scale-95 lg:hidden" aria-label="Mở menu">
+        <Menu size={18} />
+      </button>
+      <div className="hidden min-w-0 items-center gap-2.5 lg:flex">
+        <div className="flex items-center gap-2.5 rounded-lg border border-sky-100 bg-sky-50 px-3 py-1.5">
+          <Stethoscope size={16} className="text-brand" />
+          <div>
+            <p className="text-xs font-extrabold uppercase text-slate-400">Chuyên khoa</p>
+            <p className="text-xs font-semibold text-slate-700">Khoa Tai Mũi Họng</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+          <DoorOpen size={16} className="text-brand" />
+          <div>
+            <p className="text-xs font-extrabold uppercase text-slate-400">Phòng khám</p>
+            <p className="text-xs font-semibold text-slate-700">Phòng 203</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+          <CalendarDays size={16} className="text-brand" />
+          <div>
+            <p className="text-xs font-extrabold uppercase text-slate-400">Hôm nay</p>
+            <p className="text-xs font-semibold capitalize text-slate-700">{today}</p>
+          </div>
         </div>
       </div>
       <div className="ml-auto flex items-center gap-2.5">
-        <button type="button" className="hidden cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500 transition hover:border-brand hover:text-brand active:scale-[0.98] md:flex">
-          <Stethoscope size={15} className="text-brand" />
-          Khoa Tai Mũi Họng
-        </button>
-        <button type="button" className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-brand hover:text-brand active:scale-95" aria-label="Thông báo">
-          <Bell size={17} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-rose-500" />
-        </button>
-        <button type="button" className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm transition hover:border-brand active:scale-[0.98]">
-          <UserRound size={24} className="text-slate-400" />
-          <div className="hidden text-left sm:block">
-            <p className="text-sm font-bold text-slate-800">BS. Nguyễn Văn A</p>
-            <p className="text-[15px] font-medium text-[#0891B2]">Ca sáng 08:00 - 12:00</p>
+        <NotificationBell notifications={doctorNotifications} onNotificationClick={onNotificationClick} />
+        <button
+          type="button"
+          onClick={onOpenAccount}
+          className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left shadow-sm transition hover:border-brand/40 hover:bg-sky-50 active:scale-[0.99]"
+          aria-label="Mở tài khoản bác sĩ"
+          title="Mở tài khoản"
+        >
+          <CircleUserRound className="text-slate-400" size={26} />
+          <div className="hidden sm:block">
+            <p className="text-sm font-extrabold text-slate-800">BS. Nguyễn Văn A</p>
+            <p className="text-xs font-semibold text-slate-400">{title}</p>
           </div>
+        </button>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="icon-button hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+          aria-label="Đăng xuất"
+          title="Đăng xuất"
+        >
+          <LogOut size={18} />
         </button>
       </div>
     </header>

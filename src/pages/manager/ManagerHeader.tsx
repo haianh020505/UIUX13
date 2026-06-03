@@ -1,14 +1,18 @@
 import { CalendarDays, CircleUserRound, LogOut, Menu } from 'lucide-react';
-import NotificationBell, { type NotificationTarget } from '../../components/common/NotificationBell';
+import NotificationBell, { type NotificationItem } from '../../components/common/NotificationBell';
 
 export default function ManagerHeader({
   onOpenMenu,
   onNotificationClick,
   onLogout,
+  onOpenAccount,
+  activeLabel,
 }: {
   onOpenMenu: () => void;
-  onNotificationClick: (target: NotificationTarget) => void;
+  onNotificationClick: (notification: NotificationItem) => void;
   onLogout: () => void;
+  onOpenAccount: () => void;
+  activeLabel: string;
 }) {
   const today = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
@@ -18,7 +22,7 @@ export default function ManagerHeader({
   }).format(new Date());
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
       <button type="button" onClick={onOpenMenu} className="icon-button lg:hidden" aria-label="Mở menu">
         <Menu size={18} />
       </button>
@@ -43,13 +47,19 @@ export default function ManagerHeader({
       </div>
       <div className="ml-auto flex items-center gap-2.5">
         <NotificationBell onNotificationClick={onNotificationClick} />
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm">
+        <button
+          type="button"
+          onClick={onOpenAccount}
+          className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left shadow-sm transition hover:border-brand/40 hover:bg-sky-50 active:scale-[0.99]"
+          aria-label="Mở tài khoản quản lý"
+          title="Mở tài khoản"
+        >
           <CircleUserRound className="text-slate-400" size={26} />
           <div className="hidden sm:block">
             <p className="text-sm font-extrabold text-slate-800">Admin</p>
-            <p className="text-xs font-semibold text-slate-400">Quản lý phòng khám</p>
+            <p className="text-xs font-semibold text-slate-400">{activeLabel}</p>
           </div>
-        </div>
+        </button>
         <button
           type="button"
           onClick={onLogout}

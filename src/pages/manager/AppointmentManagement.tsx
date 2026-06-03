@@ -382,6 +382,11 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
   }, [anchorDate, specialtyFilter, statusFilter, viewMode]);
 
   useEffect(() => {
+    setDetailModalId(null);
+    setSelectedId(null);
+  }, [anchorDate, viewMode]);
+
+  useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
@@ -569,7 +574,7 @@ function StatusFilterTabs({ active, counts, onChange }: { active: StatusFilter; 
             type="button"
             onClick={() => onChange(tab.id)}
             className={`inline-flex h-9 items-center rounded-full border px-4 text-xs font-extrabold transition ${
-              isActive ? 'border-blue-500 bg-blue-500 text-white shadow-sm' : 'border-sky-200 bg-sky-50 text-blue-500 hover:border-blue-500 hover:bg-white'
+              isActive ? 'border-brand bg-brand text-white shadow-sm' : 'border-sky-200 bg-sky-50 text-brand hover:border-brand hover:bg-white'
             }`}
           >
             {tab.label}: {counts[tab.id]}
@@ -597,7 +602,7 @@ function AppointmentTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
+      <table className="min-w-full table-fixed text-left text-sm">
         <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
           <tr>
             <th className="px-4 py-3">Khung giờ</th>
@@ -697,7 +702,7 @@ function ConfirmActionModal({
   const isConfirm = action === 'confirm';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
         <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="text-base font-extrabold text-slate-800">{isConfirm ? 'Xác nhận lịch hẹn?' : 'Từ chối lịch hẹn?'}</h2>
@@ -847,7 +852,7 @@ function AppointmentDetailsModal({
   const patient = patientProfiles[appointment.patient] ?? { age: 32, phone: '0900.000.000', note: 'Bệnh nhân chưa để lại ghi chú thêm.' };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 py-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 py-4 sm:items-center" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-xl">
         <div className="shrink-0 flex items-start justify-between border-b border-slate-200 px-4 py-3">
           <div>

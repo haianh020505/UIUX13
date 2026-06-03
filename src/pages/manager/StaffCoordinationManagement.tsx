@@ -1,12 +1,15 @@
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Edit3, MapPin, Plus, Search, Stethoscope, Trash2, UserRound, UsersRound, X, Download } from 'lucide-react';
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Edit3, FileText, MapPin, Plus, Search, Stethoscope, Trash2, UserRound, UsersRound, X, Download } from 'lucide-react';
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { mockStaff } from '../../data/clinicMock';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
 
 type StaffTab = 'list' | 'schedule' | 'alerts';
 type ScheduleView = 'day' | 'week' | 'month';
-type StaffStatus = 'active' | 'leave' | 'upcoming';
 type StaffRole = 'Bác sĩ' | 'Điều dưỡng' | 'Kỹ thuật viên' | 'Lễ tân';
+type OverrideStatus = 'PRESENT' | 'ABSENT' | 'APPROVED_LEAVE' | null;
+type AttendanceState = 'upcoming' | 'present' | 'late' | 'absent' | 'approvedLeave';
+type AbsenceSource = 'manual' | 'auto' | null;
 
 type Staff = {
   id: string;
@@ -15,7 +18,20 @@ type Staff = {
   specialty: string;
   phone: string;
   email: string;
-  status: StaffStatus;
+  shiftStart: string;
+  shiftEnd: string;
+  checkInAt: string | null;
+  overrideStatus: OverrideStatus;
+  manualCheckInBy?: string;
+  manualCheckInAt?: string;
+  absenceReportedBy?: string;
+  absenceReportedAt?: string;
+};
+
+type DerivedAttendance = {
+  attendanceState: AttendanceState;
+  absenceSource: AbsenceSource;
+  effectiveCheckInAt: string | null;
 };
 
 type AlertItem = {
@@ -36,31 +52,131 @@ type SelectedShift = {
   alertId?: string;
 };
 
+type ReportAbsenceRequest = {
+  id: string;
+  name: string;
+};
+
+type ShiftLabel = 'Sáng' | 'Chiều' | 'Tối' | 'Cả ngày';
+
+type CreatedShift = {
+  id: string;
+  staffId: string;
+  date: string; // YYYY-MM-DD
+  label: ShiftLabel;
+  startTime: string;
+  endTime: string;
+  location: string;
+  note: string;
+};
+
+const shiftTimeDefaults: Record<ShiftLabel, { start: string; end: string }> = {
+  'Sáng': { start: '08:00', end: '12:00' },
+  'Chiều': { start: '13:00', end: '17:00' },
+  'Tối': { start: '18:00', end: '22:00' },
+  'Cả ngày': { start: '08:00', end: '17:00' },
+};
+
 const primaryText = 'text-brand';
 const primaryBg = 'bg-brand';
 const roles: StaffRole[] = ['Bác sĩ', 'Điều dưỡng', 'Kỹ thuật viên', 'Lễ tân'];
 const specialties = ['Không áp dụng', 'Tai Mũi Họng', 'Nội Tổng Hợp', 'Nhi Khoa', 'Lễ tân & Điều phối'];
+const attendanceGraceMinutes = 30;
+const demoCurrentTime = '2026-06-01T08:45:00';
+const currentManagerUserId = 'manager-demo';
+
+function getDefaultShiftWindow(role: StaffRole) {
+  if (role === 'Bác sĩ') return { shiftStart: '2026-06-01T08:00:00', shiftEnd: '2026-06-01T12:00:00' };
+  if (role === 'Điều dưỡng') return { shiftStart: '2026-06-01T13:00:00', shiftEnd: '2026-06-01T17:00:00' };
+  if (role === 'Kỹ thuật viên') return { shiftStart: '2026-06-01T08:00:00', shiftEnd: '2026-06-01T17:00:00' };
+  return { shiftStart: '2026-06-01T08:00:00', shiftEnd: '2026-06-01T17:00:00' };
+}
+
+function createStaff(
+  staff: Omit<Staff, 'shiftStart' | 'shiftEnd' | 'checkInAt' | 'overrideStatus'> & Partial<Pick<Staff, 'shiftStart' | 'shiftEnd' | 'checkInAt' | 'overrideStatus' | 'manualCheckInBy' | 'manualCheckInAt' | 'absenceReportedBy' | 'absenceReportedAt'>>
+): Staff {
+  const shift = getDefaultShiftWindow(staff.role);
+  return {
+    ...staff,
+    shiftStart: staff.shiftStart ?? shift.shiftStart,
+    shiftEnd: staff.shiftEnd ?? shift.shiftEnd,
+    checkInAt: staff.checkInAt ?? null,
+    overrideStatus: staff.overrideStatus ?? null,
+  };
+}
+
+function addMinutes(value: string, minutes: number) {
+  return new Date(new Date(value).getTime() + minutes * 60 * 1000);
+}
+
+function deriveAttendance(staff: Staff, currentTime = demoCurrentTime): DerivedAttendance {
+  if (staff.overrideStatus === 'APPROVED_LEAVE') {
+    return { attendanceState: 'approvedLeave', absenceSource: null, effectiveCheckInAt: null };
+  }
+
+  if (staff.overrideStatus === 'ABSENT') {
+    return { attendanceState: 'absent', absenceSource: 'manual', effectiveCheckInAt: null };
+  }
+
+  const effectiveCheckInAt = staff.checkInAt ?? (staff.overrideStatus === 'PRESENT' ? staff.manualCheckInAt ?? currentTime : null);
+  const graceDeadline = addMinutes(staff.shiftStart, attendanceGraceMinutes);
+
+  if (effectiveCheckInAt) {
+    return {
+      attendanceState: new Date(effectiveCheckInAt) <= graceDeadline ? 'present' : 'late',
+      absenceSource: null,
+      effectiveCheckInAt,
+    };
+  }
+
+  if (new Date(currentTime) < graceDeadline) {
+    return { attendanceState: 'upcoming', absenceSource: null, effectiveCheckInAt: null };
+  }
+
+  return { attendanceState: 'absent', absenceSource: 'auto', effectiveCheckInAt: null };
+}
+
+function formatShiftTimeRange(staff: Staff) {
+  return `${formatTime(staff.shiftStart)} - ${formatTime(staff.shiftEnd)}`;
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+}
 
 const initialStaff: Staff[] = [
-  { id: 'ST-001', name: 'BS. Nguyễn Duy Cương', role: 'Bác sĩ', specialty: 'Tai Mũi Họng', phone: '0912.345.678', email: 'cuongnd@fakeeh.care', status: 'active' },
-  { id: 'ST-045', name: 'Điều dưỡng Nguyễn Nhật Linh', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0988.123.456', email: 'linhnn@fakeeh.care', status: 'leave' },
-  { id: 'ST-052', name: 'BS. Trần Văn C', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0904.555.666', email: 'tranc@fakeeh.care', status: 'upcoming' },
-  { id: 'ST-060', name: 'BS. Lê Nguyễn Công Minh', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0908.888.222', email: 'minhlnc@fakeeh.care', status: 'active' },
-  { id: 'ST-077', name: 'KTV. Phạm Anh Khoa', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0933.123.222', email: 'khoapa@fakeeh.care', status: 'upcoming' },
-  { id: 'ST-083', name: 'BS. Hoàng Minh Khang', role: 'Bác sĩ', specialty: 'Tai Mũi Họng', phone: '0977.654.321', email: 'khanghm@fakeeh.care', status: 'active' },
-  { id: 'ST-091', name: 'ĐD. Mai Thu Hằng', role: 'Điều dưỡng', specialty: 'Nhi Khoa', phone: '0966.777.888', email: 'hangmt@fakeeh.care', status: 'upcoming' },
-  { id: 'ST-104', name: 'LT. Phạm Quỳnh Anh', role: 'Lễ tân', specialty: 'Lễ tân & Điều phối', phone: '0945.888.999', email: 'anhpq@fakeeh.care', status: 'active' },
-  { id: 'ST-118', name: 'BS. Vũ Hải Nam', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0932.222.111', email: 'namvh@fakeeh.care', status: 'leave' },
-  { id: 'ST-126', name: 'KTV. Nguyễn Đức Huy', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0921.555.777', email: 'huynd@fakeeh.care', status: 'active' },
-  { id: 'ST-139', name: 'ĐD. Trần Bảo Ngọc', role: 'Điều dưỡng', specialty: 'Tai Mũi Họng', phone: '0919.333.444', email: 'ngoctb@fakeeh.care', status: 'upcoming' },
-  { id: 'ST-150', name: 'BS. Đặng Minh Quân', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0981.222.333', email: 'quandm@fakeeh.care', status: 'active' },
-  { id: 'ST-163', name: 'LT. Nguyễn Hoài An', role: 'Lễ tân', specialty: 'Lễ tân & Điều phối', phone: '0909.321.456', email: 'annh@fakeeh.care', status: 'active' },
-  { id: 'ST-174', name: 'ĐD. Lê Phương Mai', role: 'Điều dưỡng', specialty: 'Nội Tổng Hợp', phone: '0938.654.777', email: 'mailp@fakeeh.care', status: 'upcoming' },
-  { id: 'ST-185', name: 'BS. Phạm Minh D', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0962.444.555', email: 'minhdp@fakeeh.care', status: 'active' },
-  { id: 'ST-196', name: 'BS. Nguyễn Thu Hương', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0971.222.888', email: 'huongnt@fakeeh.care', status: 'active' },
-  { id: 'ST-207', name: 'KTV. Trương Gia Huy', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0915.333.777', email: 'huytg@fakeeh.care', status: 'leave' },
-  { id: 'ST-218', name: 'ĐD. Hồ Minh Tâm', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0906.888.111', email: 'tamhm@fakeeh.care', status: 'active' },
+  createStaff({ id: 'ST-001', name: 'BS. Nguyễn Duy Cương', role: 'Bác sĩ', specialty: 'Tai Mũi Họng', phone: '0912.345.678', email: 'cuongnd@fakeeh.care', checkInAt: '2026-06-01T08:05:00' }),
+  createStaff({ id: 'ST-045', name: 'Điều dưỡng Nguyễn Nhật Linh', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0988.123.456', email: 'linhnn@fakeeh.care', overrideStatus: 'APPROVED_LEAVE' }),
+  createStaff({ id: 'ST-052', name: 'BS. Trần Văn C', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0904.555.666', email: 'tranc@fakeeh.care' }),
+  createStaff({ id: 'ST-060', name: 'BS. Lê Nguyễn Công Minh', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0908.888.222', email: 'minhlnc@fakeeh.care', checkInAt: '2026-06-01T08:45:00' }),
+  createStaff({ id: 'ST-077', name: 'KTV. Phạm Anh Khoa', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0933.123.222', email: 'khoapa@fakeeh.care' }),
+  createStaff({ id: 'ST-083', name: 'BS. Hoàng Minh Khang', role: 'Bác sĩ', specialty: 'Tai Mũi Họng', phone: '0977.654.321', email: 'khanghm@fakeeh.care', checkInAt: '2026-06-01T07:55:00' }),
+  createStaff({ id: 'ST-091', name: 'ĐD. Mai Thu Hằng', role: 'Điều dưỡng', specialty: 'Nhi Khoa', phone: '0966.777.888', email: 'hangmt@fakeeh.care' }),
+  createStaff({ id: 'ST-104', name: 'LT. Phạm Quỳnh Anh', role: 'Lễ tân', specialty: 'Lễ tân & Điều phối', phone: '0945.888.999', email: 'anhpq@fakeeh.care', checkInAt: '2026-06-01T08:10:00' }),
+  createStaff({ id: 'ST-118', name: 'BS. Vũ Hải Nam', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0932.222.111', email: 'namvh@fakeeh.care', overrideStatus: 'ABSENT', absenceReportedBy: currentManagerUserId, absenceReportedAt: '2026-06-01T08:20:00' }),
+  createStaff({ id: 'ST-126', name: 'KTV. Nguyễn Đức Huy', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0921.555.777', email: 'huynd@fakeeh.care', checkInAt: '2026-06-01T08:25:00' }),
+  createStaff({ id: 'ST-139', name: 'ĐD. Trần Bảo Ngọc', role: 'Điều dưỡng', specialty: 'Tai Mũi Họng', phone: '0919.333.444', email: 'ngoctb@fakeeh.care' }),
+  createStaff({ id: 'ST-150', name: 'BS. Đặng Minh Quân', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0981.222.333', email: 'quandm@fakeeh.care', checkInAt: '2026-06-01T08:32:00' }),
+  createStaff({ id: 'ST-163', name: 'LT. Nguyễn Hoài An', role: 'Lễ tân', specialty: 'Lễ tân & Điều phối', phone: '0909.321.456', email: 'annh@fakeeh.care', overrideStatus: 'PRESENT', manualCheckInBy: currentManagerUserId, manualCheckInAt: '2026-06-01T08:35:00' }),
+  createStaff({ id: 'ST-174', name: 'ĐD. Lê Phương Mai', role: 'Điều dưỡng', specialty: 'Nội Tổng Hợp', phone: '0938.654.777', email: 'mailp@fakeeh.care' }),
+  createStaff({ id: 'ST-185', name: 'BS. Phạm Minh D', role: 'Bác sĩ', specialty: 'Nội Tổng Hợp', phone: '0962.444.555', email: 'minhdp@fakeeh.care', checkInAt: '2026-06-01T08:00:00' }),
+  createStaff({ id: 'ST-196', name: 'BS. Nguyễn Thu Hương', role: 'Bác sĩ', specialty: 'Nhi Khoa', phone: '0971.222.888', email: 'huongnt@fakeeh.care', checkInAt: '2026-06-01T08:18:00' }),
+  createStaff({ id: 'ST-207', name: 'KTV. Trương Gia Huy', role: 'Kỹ thuật viên', specialty: 'Không áp dụng', phone: '0915.333.777', email: 'huytg@fakeeh.care', overrideStatus: 'APPROVED_LEAVE' }),
+  createStaff({ id: 'ST-218', name: 'ĐD. Hồ Minh Tâm', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0906.888.111', email: 'tamhm@fakeeh.care' }),
 ];
+
+const standardizedStaff: Staff[] = mockStaff.map((item, index) => createStaff({
+  id: item.id,
+  name: item.name,
+  role: item.role,
+  specialty: item.specialty,
+  phone: item.phone,
+  email: item.email,
+  checkInAt: index % 5 === 0 ? '2026-06-01T08:45:00' : index % 3 === 0 ? '2026-06-01T08:05:00' : undefined,
+  overrideStatus: index === 1 || index === 16 ? 'APPROVED_LEAVE' : index === 8 ? 'ABSENT' : null,
+  absenceReportedBy: index === 8 ? currentManagerUserId : undefined,
+  absenceReportedAt: index === 8 ? '2026-06-01T08:20:00' : undefined,
+}));
 
 const alerts: AlertItem[] = [
   {
@@ -161,28 +277,108 @@ function nextStaffCode(staff: Staff[]) {
 }
 
 export default function StaffCoordinationManagement({ onNotify }: { onNotify?: (message: string) => void }) {
-  const [staff, setStaff] = useState(initialStaff);
+  const [staff, setStaff] = useState(standardizedStaff);
   const [activeTab, setActiveTab] = useState<StaffTab>('list');
   const [selectedAlertId, setSelectedAlertId] = useState(alerts[0].id);
+  const [createdShifts, setCreatedShifts] = useState<CreatedShift[]>([]);
+  const [pendingAbsence, setPendingAbsence] = useState<ReportAbsenceRequest | null>(null);
 
-  const handleReportAbsence = (staffId: string) => {
+  const handleRequestAbsence = (request: ReportAbsenceRequest) => {
+    setPendingAbsence(request);
+  };
+
+  const handleMarkPresent = (staffId: string, name: string) => {
     setStaff((items) =>
-      items.map((item) => (item.id === staffId ? { ...item, status: 'leave' } : item))
+      items.map((item) => (
+        item.id === staffId
+          ? {
+              ...item,
+              overrideStatus: 'PRESENT',
+              manualCheckInBy: currentManagerUserId,
+              manualCheckInAt: demoCurrentTime,
+              absenceReportedBy: undefined,
+              absenceReportedAt: undefined,
+            }
+          : item
+      ))
     );
-    onNotify?.('Đã báo vắng nhân sự thành công');
+    onNotify?.(`Đã ghi nhận có mặt cho ${name}`);
+  };
+
+  const handleCancelAbsence = (staffId: string, name: string) => {
+    setStaff((items) =>
+      items.map((item) => (
+        item.id === staffId && item.overrideStatus === 'ABSENT'
+          ? {
+              ...item,
+              overrideStatus: null,
+              absenceReportedBy: undefined,
+              absenceReportedAt: undefined,
+            }
+          : item
+      ))
+    );
+    onNotify?.(`Đã hủy báo vắng cho ${name}`);
+  };
+
+  const confirmReportAbsence = () => {
+    if (!pendingAbsence) {
+      return;
+    }
+
+    setStaff((items) =>
+      items.map((item) => (
+        item.id === pendingAbsence.id
+          ? {
+              ...item,
+              overrideStatus: 'ABSENT',
+              absenceReportedBy: currentManagerUserId,
+              absenceReportedAt: demoCurrentTime,
+            }
+          : item
+      ))
+    );
+    onNotify?.(`Đã ghi nhận báo vắng cho ${pendingAbsence.name}`);
+    setPendingAbsence(null);
+  };
+
+  const handleCreateShift = (shift: CreatedShift) => {
+    setCreatedShifts((prev) => [...prev, shift]);
+    onNotify?.('Phân công ca trực thành công ✓');
   };
 
   return (
     <div>
+      {pendingAbsence ? (
+        <ConfirmDialog
+          title="Xác nhận báo vắng"
+          message={`Xác nhận báo vắng nhân sự ${pendingAbsence.name}?`}
+          cancelText="Hủy bỏ"
+          confirmText="Xác nhận"
+          tone="danger"
+          iconless
+          showCloseButton={false}
+          onCancel={() => setPendingAbsence(null)}
+          onConfirm={confirmReportAbsence}
+        />
+      ) : null}
       <h1 className="mb-4 text-xl font-bold text-slate-800">Lịch trực & Điều phối</h1>
       <StaffTabs activeTab={activeTab} onChange={setActiveTab} />
       <div className="mt-5">
         {activeTab === 'list' ? (
-          <StaffList staff={staff} onReportAbsence={handleReportAbsence} />
+          <StaffList
+            staff={staff}
+            onMarkPresent={handleMarkPresent}
+            onRequestAbsence={handleRequestAbsence}
+            onCancelAbsence={handleCancelAbsence}
+            onNotify={onNotify}
+          />
         ) : null}
         {activeTab === 'schedule' ? (
           <ScheduleTab
             staff={staff}
+            createdShifts={createdShifts}
+            onCreateShift={handleCreateShift}
             onNavigateToAlert={(alertId) => {
               setSelectedAlertId(alertId);
               setActiveTab('alerts');
@@ -195,7 +391,11 @@ export default function StaffCoordinationManagement({ onNotify }: { onNotify?: (
             selectedAlertId={selectedAlertId}
             onSelectAlert={setSelectedAlertId}
             onAssign={(replacement) => {
-              setStaff((items) => items.map((item) => (item.id === replacement.id ? { ...item, status: 'active' } : item)));
+              setStaff((items) => items.map((item) => (
+                item.id === replacement.id
+                  ? { ...item, overrideStatus: 'PRESENT', manualCheckInBy: currentManagerUserId, manualCheckInAt: demoCurrentTime }
+                  : item
+              )));
               onNotify?.('Đã xác nhận điều phối thay thế');
             }}
           />
@@ -231,39 +431,70 @@ function StaffTabs({ activeTab, onChange }: { activeTab: StaffTab; onChange: (ta
   );
 }
 
-function StaffList({ staff, onReportAbsence }: { staff: Staff[]; onReportAbsence: (id: string) => void }) {
+function StaffList({
+  staff,
+  onMarkPresent,
+  onRequestAbsence,
+  onCancelAbsence,
+  onNotify,
+}: {
+  staff: Staff[];
+  onMarkPresent: (staffId: string, name: string) => void;
+  onRequestAbsence: (request: ReportAbsenceRequest) => void;
+  onCancelAbsence: (staffId: string, name: string) => void;
+  onNotify?: (message: string) => void;
+}) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 5;
-  const totalStaffCount = 45;
   const filteredStaff = staff.filter((item) => {
     const keyword = query.trim().toLowerCase();
     return !keyword || [item.id, item.name, item.phone, item.specialty].some((value) => value.toLowerCase().includes(keyword));
   });
+  const totalStaffCount = filteredStaff.length;
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
   const pagedStaff = filteredStaff.slice((page - 1) * pageSize, page * pageSize);
   const pageStart = filteredStaff.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const pageEnd = Math.min(page * pageSize, filteredStaff.length);
+  const attendanceSummary = staff.reduce(
+    (summary, item) => {
+      const state = deriveAttendance(item).attendanceState;
+      if (state === 'present') summary.present += 1;
+      if (state === 'late') summary.late += 1;
+      if (state === 'absent') summary.absent += 1;
+      if (state === 'approvedLeave') summary.approvedLeave += 1;
+      return summary;
+    },
+    { present: 0, late: 0, absent: 0, approvedLeave: 0 }
+  );
   const stats = [
-    { label: 'Tổng ca trực hôm nay', value: 25, icon: UsersRound, tone: 'bg-sky-50 text-brand', valueClass: 'text-slate-800' },
-    { label: 'Đã có mặt', value: 22, icon: CalendarDays, tone: 'bg-emerald-50 text-emerald-600', valueClass: 'text-green-600' },
-    { label: 'Vắng mặt / Đi muộn', value: 3, icon: AlertTriangle, tone: 'bg-rose-50 text-rose-600', valueClass: 'text-rose-600' },
+    { label: 'Tổng ca trực hôm nay', value: staff.length, icon: UsersRound, tone: 'bg-sky-50 text-brand', valueClass: 'text-slate-800' },
+    { label: 'Có mặt / Đi muộn', value: attendanceSummary.present + attendanceSummary.late, icon: CalendarDays, tone: 'bg-emerald-50 text-emerald-600', valueClass: 'text-green-600' },
+    { label: 'Vắng mặt / Nghỉ phép', value: attendanceSummary.absent + attendanceSummary.approvedLeave, icon: AlertTriangle, tone: 'bg-rose-50 text-rose-600', valueClass: 'text-rose-600' },
   ];
 
   const getTodayShift = (item: Staff) => {
-    if (item.role === 'Bác sĩ') return 'Ca sáng 08:00 - 12:00';
-    if (item.role === 'Điều dưỡng') return 'Ca chiều 13:00 - 17:00';
-    return 'Hành chính 08:00 - 17:00';
+    if (item.role === 'Bác sĩ') return `Ca Sáng ${formatShiftTimeRange(item)}`;
+    if (item.role === 'Điều dưỡng') return `Ca Chiều ${formatShiftTimeRange(item)}`;
+    if (item.role === 'Kỹ thuật viên') return `Cả ngày ${formatShiftTimeRange(item)}`;
+    return `Hành chính ${formatShiftTimeRange(item)}`;
   };
 
-  const getCoordinationStatusBadge = (status: StaffStatus) => {
-    if (status === 'active') {
-      return <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-extrabold text-green-700">Có mặt</span>;
+  const getCoordinationStatusBadge = (state: AttendanceState) => {
+    const baseClass = 'inline-flex rounded-full px-3 py-1 text-xs font-extrabold';
+    if (state === 'present') {
+      return <span className={baseClass} style={{ background: 'var(--color-success-light)', color: 'color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary))' }}>Có mặt</span>;
     }
-    if (status === 'upcoming') {
-      return <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-500">Chưa đến</span>;
+    if (state === 'late') {
+      return <span className={baseClass} style={{ background: 'var(--color-warning-light)', color: 'var(--color-warning)' }}>Đi muộn</span>;
     }
-    return <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-extrabold text-red-700">Vắng mặt</span>;
+    if (state === 'approvedLeave') {
+      return <span className={baseClass} style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>Nghỉ phép</span>;
+    }
+    if (state === 'upcoming') {
+      return <span className={baseClass} style={{ background: 'var(--color-bg-subtle)', color: 'var(--color-secondary)' }}>Chưa đến</span>;
+    }
+    return <span className={baseClass} style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)' }}>Vắng mặt</span>;
   };
 
   return (
@@ -301,7 +532,7 @@ function StaffList({ staff, onReportAbsence }: { staff: Staff[]; onReportAbsence
         </label>
         <button
           type="button"
-          onClick={() => alert('Xuất báo cáo chấm công thành công!')}
+          onClick={() => onNotify?.('Xuất báo cáo chấm công thành công!')}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition shadow-sm"
         >
           <Download size={16} />
@@ -321,30 +552,90 @@ function StaffList({ staff, onReportAbsence }: { staff: Staff[]; onReportAbsence
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {pagedStaff.map((item) => (
-              <tr key={item.id} className="bg-white transition hover:bg-slate-50">
-                <td className="px-4 py-3 text-slate-600">{item.id}</td>
-                <td className="px-4 py-3 font-extrabold text-slate-800">{item.name}</td>
-                <td className="px-4 py-3 text-slate-600 font-semibold">
-                  {getTodayShift(item)}
-                </td>
-                <td className="px-4 py-3 text-slate-600 font-semibold">
-                  {getShiftLocation(item)}
-                </td>
-                <td className="px-4 py-3">{getCoordinationStatusBadge(item.status)}</td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => onReportAbsence(item.id)}
-                      className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded px-2.5 py-1 text-sm font-semibold transition"
-                    >
-                      Báo vắng
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {pagedStaff.map((item) => {
+              const shift = getTodayShift(item);
+              const attendance = deriveAttendance(item);
+              const canReportAbsent = attendance.attendanceState === 'upcoming';
+              const canManualPresent = attendance.attendanceState === 'upcoming' || (attendance.attendanceState === 'absent' && attendance.absenceSource === 'auto');
+              const canCancelManualAbsence = attendance.attendanceState === 'absent' && attendance.absenceSource === 'manual';
+
+              return (
+                <tr key={item.id} className="bg-white transition hover:bg-slate-50">
+                  <td className="px-4 py-3 text-slate-600">{item.id}</td>
+                  <td className="px-4 py-3 font-extrabold text-slate-800">{item.name}</td>
+                  <td className="px-4 py-3 text-slate-600 font-semibold">
+                    {shift}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 font-semibold">
+                    {getShiftLocation(item)}
+                  </td>
+                  <td className="px-4 py-3">{getCoordinationStatusBadge(attendance.attendanceState)}</td>
+                  <td className="px-4 py-3">
+                    {canReportAbsent ? (
+                      <div className="attendance-actions">
+                        <button
+                          type="button"
+                          onClick={() => onMarkPresent(item.id, item.name)}
+                          className="attendance-action-button attendance-action-button--success"
+                        >
+                          Xác nhận có mặt
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onRequestAbsence({ id: item.id, name: item.name })}
+                          className="attendance-action-button attendance-action-button--danger"
+                        >
+                          Báo vắng
+                        </button>
+                      </div>
+                    ) : null}
+                    {canManualPresent && !canReportAbsent ? (
+                      <div className="attendance-actions">
+                        <button
+                          type="button"
+                          onClick={() => onMarkPresent(item.id, item.name)}
+                          className="attendance-action-button attendance-action-button--success"
+                        >
+                          Xác nhận có mặt
+                        </button>
+                      </div>
+                    ) : null}
+                    {canCancelManualAbsence ? (
+                      <div className="attendance-actions">
+                        <button
+                          type="button"
+                          onClick={() => onCancelAbsence(item.id, item.name)}
+                          className="attendance-action-button attendance-action-button--neutral"
+                        >
+                          Hủy báo vắng
+                        </button>
+                      </div>
+                    ) : null}
+                    {attendance.attendanceState === 'present' ? (
+                      <div className="attendance-actions">
+                        <button type="button" disabled className="attendance-action-button attendance-action-button--disabled">
+                          Đã ghi nhận
+                        </button>
+                      </div>
+                    ) : null}
+                    {attendance.attendanceState === 'late' ? (
+                      <div className="attendance-actions">
+                        <button type="button" disabled className="attendance-action-button attendance-action-button--disabled">
+                          Đi muộn
+                        </button>
+                      </div>
+                    ) : null}
+                    {attendance.attendanceState === 'approvedLeave' ? (
+                      <div className="attendance-actions">
+                        <button type="button" disabled className="attendance-action-button attendance-action-button--disabled">
+                          Nghỉ phép
+                        </button>
+                      </div>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -389,10 +680,11 @@ function StaffList({ staff, onReportAbsence }: { staff: Staff[]; onReportAbsence
   );
 }
 
-function ScheduleTab({ staff, onNavigateToAlert }: { staff: Staff[]; onNavigateToAlert?: (alertId: string) => void }) {
+function ScheduleTab({ staff, createdShifts, onCreateShift, onNavigateToAlert }: { staff: Staff[]; createdShifts: CreatedShift[]; onCreateShift: (shift: CreatedShift) => void; onNavigateToAlert?: (alertId: string) => void }) {
   const [view, setView] = useState<ScheduleView>('week');
   const [anchorDate, setAnchorDate] = useState(() => new Date(2026, 4, 10));
   const [selectedShift, setSelectedShift] = useState<SelectedShift | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleMonthDayClick = (day: number) => {
     setAnchorDate(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), day));
@@ -407,12 +699,32 @@ function ScheduleTab({ staff, onNavigateToAlert }: { staff: Staff[]; onNavigateT
     <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <ScheduleDateNavigator view={view} anchorDate={anchorDate} onChange={setAnchorDate} />
-        <ScheduleToggle value={view} onChange={setView} />
+        <div className="flex items-center gap-3">
+          <ScheduleToggle value={view} onChange={setView} />
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1f7fb9] hover:shadow-md active:translate-y-0 active:shadow-sm"
+          >
+            <Plus size={16} />
+            Phân công ca trực
+          </button>
+        </div>
       </div>
-      {view === 'day' ? <DaySchedule staff={staff} anchorDate={anchorDate} onWarningClick={onNavigateToAlert} onShiftClick={handleShiftClick} /> : null}
-      {view === 'week' ? <WeekSchedule staff={staff} onWarningClick={onNavigateToAlert} onShiftClick={handleShiftClick} /> : null}
+      {view === 'day' ? <DaySchedule staff={staff} createdShifts={createdShifts} anchorDate={anchorDate} onWarningClick={onNavigateToAlert} onShiftClick={handleShiftClick} onCreateShift={() => setShowCreateModal(true)} /> : null}
+      {view === 'week' ? <WeekSchedule staff={staff} createdShifts={createdShifts} onWarningClick={onNavigateToAlert} onShiftClick={handleShiftClick} /> : null}
       {view === 'month' ? <MonthSchedule onDayClick={handleMonthDayClick} /> : null}
       {selectedShift ? <ShiftDetailModal shift={selectedShift} onClose={() => setSelectedShift(null)} /> : null}
+      {showCreateModal ? (
+        <CreateShiftModal
+          staff={staff}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={(shift) => {
+            onCreateShift(shift);
+            setShowCreateModal(false);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
@@ -485,8 +797,8 @@ const dayShiftData: Record<number, { label: string; time: string; staffIndex: nu
     { label: 'Sáng', time: '07:30 - 11:30', staffIndex: 7, warning: false },
     { label: 'Sáng', time: '08:00 - 12:00', staffIndex: 0, warning: false },
     { label: 'Sáng', time: '08:00 - 12:00', staffIndex: 3, warning: false },
-    { label: 'Trưa', time: '11:30 - 13:30', staffIndex: 9, warning: false },
-    { label: 'Trưa', time: '11:30 - 13:30', staffIndex: 12, warning: true, alertId: 'AL-07' },
+    { label: 'Sáng', time: '11:30 - 13:30', staffIndex: 9, warning: false },
+    { label: 'Sáng', time: '11:30 - 13:30', staffIndex: 12, warning: true, alertId: 'AL-07' },
     { label: 'Chiều', time: '14:00 - 18:00', staffIndex: 2, warning: true, alertId: 'AL-04' },
     { label: 'Chiều', time: '14:00 - 18:00', staffIndex: 11, warning: false },
     { label: 'Tối', time: '18:00 - 21:00', staffIndex: 10, warning: false },
@@ -533,29 +845,46 @@ const dayShiftData: Record<number, { label: string; time: string; staffIndex: nu
   ],
 };
 
-function DaySchedule({ staff, anchorDate, onWarningClick, onShiftClick }: { staff: Staff[]; anchorDate: Date; onWarningClick?: (alertId: string) => void; onShiftClick?: (shift: SelectedShift) => void }) {
+function DaySchedule({ staff, createdShifts, anchorDate, onWarningClick, onShiftClick, onCreateShift }: { staff: Staff[]; createdShifts: CreatedShift[]; anchorDate: Date; onWarningClick?: (alertId: string) => void; onShiftClick?: (shift: SelectedShift) => void; onCreateShift?: () => void }) {
   const day = anchorDate.getDate();
-  const shifts = dayShiftData[day] ?? [];
+  const mockShifts = dayShiftData[day] ?? [];
 
-  if (shifts.length === 0) {
+  // Merge dynamic shifts for this date
+  const dateStr = `${anchorDate.getFullYear()}-${String(anchorDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const dynamicShifts = createdShifts.filter((s) => s.date === dateStr);
+
+  const hasAnyShifts = mockShifts.length > 0 || dynamicShifts.length > 0;
+
+  if (!hasAnyShifts) {
     return (
-      <div className="flex min-h-60 flex-col items-center justify-center text-slate-400">
-        <CalendarDays size={36} className="mb-3 opacity-40" />
-        <p className="text-sm font-semibold">Không có ca trực ngày {day}/{anchorDate.getMonth() + 1}</p>
+      <div className="flex min-h-60 flex-col items-center justify-center text-slate-400" role="status">
+        <CalendarDays size={40} className="mb-3 opacity-30" />
+        <p className="text-sm font-bold text-slate-500">Chưa có ca trực ngày {day}/{anchorDate.getMonth() + 1}</p>
+        <p className="mt-1 text-xs text-slate-400">Bắt đầu bằng cách phân công ca trực cho nhân sự.</p>
+        {onCreateShift ? (
+          <button
+            type="button"
+            onClick={onCreateShift}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1f7fb9] hover:shadow-md"
+          >
+            <Plus size={16} />
+            Phân công ca trực
+          </button>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {shifts.map((shift, i) => {
+      {mockShifts.map((shift, i) => {
         const staffMember = staff[shift.staffIndex];
         const handleClick = shift.warning && shift.alertId
           ? () => onWarningClick?.(shift.alertId!)
           : () => onShiftClick?.({ label: shift.label, time: shift.time, staff: staffMember, warning: shift.warning, alertId: shift.alertId });
         return (
           <ShiftCard
-            key={`${shift.label}-${shift.time}-${i}`}
+            key={`mock-${shift.label}-${shift.time}-${i}`}
             label={shift.label}
             time={shift.time}
             staff={staffMember}
@@ -564,11 +893,28 @@ function DaySchedule({ staff, anchorDate, onWarningClick, onShiftClick }: { staf
           />
         );
       })}
+      {dynamicShifts.map((shift) => {
+        const staffMember = staff.find((s) => s.id === shift.staffId);
+        return (
+          <ShiftCard
+            key={`new-${shift.id}`}
+            label={shift.label}
+            time={`${shift.startTime} - ${shift.endTime}`}
+            staff={staffMember}
+            isNew
+            onClick={() => onShiftClick?.({
+              label: shift.label,
+              time: `${shift.startTime} - ${shift.endTime}`,
+              staff: staffMember!,
+            })}
+          />
+        );
+      })}
     </div>
   );
 }
 
-function WeekSchedule({ staff, onWarningClick, onShiftClick }: { staff: Staff[]; onWarningClick?: (alertId: string) => void; onShiftClick?: (shift: SelectedShift) => void }) {
+function WeekSchedule({ staff, createdShifts, onWarningClick, onShiftClick }: { staff: Staff[]; createdShifts: CreatedShift[]; onWarningClick?: (alertId: string) => void; onShiftClick?: (shift: SelectedShift) => void }) {
   const days = ['Thứ 2 (10/05)', 'Thứ 3 (11/05)', 'Thứ 4 (12/05)', 'Thứ 5 (13/05)', 'Thứ 6 (14/05)', 'Thứ 7 (15/05)', 'CN (16/05)'];
   const shortLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
   const dateLabels = ['10/05', '11/05', '12/05', '13/05', '14/05', '15/05', '16/05'];
@@ -576,7 +922,7 @@ function WeekSchedule({ staff, onWarningClick, onShiftClick }: { staff: Staff[];
     // Thứ 2
     { day: 'Thứ 2 (10/05)', label: 'Sáng', time: '08:00', staff: staff[0], warning: false },
     { day: 'Thứ 2 (10/05)', label: 'Sáng', time: '08:00', staff: staff[3], warning: false },
-    { day: 'Thứ 2 (10/05)', label: 'Trưa', time: '11:30', staff: staff[12], warning: true, alertId: 'AL-07' },
+    { day: 'Thứ 2 (10/05)', label: 'Sáng', time: '11:30', staff: staff[12], warning: true, alertId: 'AL-07' },
     { day: 'Thứ 2 (10/05)', label: 'Chiều', time: '13:00', staff: staff[7], warning: false },
     { day: 'Thứ 2 (10/05)', label: 'Chiều', time: '14:00', staff: staff[2], warning: true, alertId: 'AL-04' },
     { day: 'Thứ 2 (10/05)', label: 'Tối', time: '18:00', staff: staff[10], warning: false },
@@ -648,25 +994,57 @@ function WeekSchedule({ staff, onWarningClick, onShiftClick }: { staff: Staff[];
                 isToday ? 'bg-sky-50/60' : index >= 5 ? 'bg-amber-50/30' : 'bg-white'
               }`}
             >
-              {dayShifts.length === 0 ? (
-                <p className="mt-8 text-center text-xs font-semibold text-slate-300">Không có ca</p>
-              ) : (
-                dayShifts.map((shift, i) => {
-                  const handleClick = shift.warning && shift.alertId
-                    ? () => onWarningClick?.(shift.alertId!)
-                    : () => onShiftClick?.({ label: shift.label, time: shift.time, staff: shift.staff, warning: shift.warning, alertId: shift.alertId });
-                  return (
-                    <WeekShiftCard
-                      key={`${shift.day}-${shift.label}-${i}`}
-                      label={shift.label}
-                      time={shift.time}
-                      staff={shift.staff}
-                      warning={shift.warning}
-                      onClick={handleClick}
-                    />
-                  );
-                })
-              )}
+              {(() => {
+                // Merge dynamic shifts for this day
+                const dayDateMap: Record<string, string> = {
+                  'Thứ 2 (10/05)': '2026-05-10', 'Thứ 3 (11/05)': '2026-05-11',
+                  'Thứ 4 (12/05)': '2026-05-12', 'Thứ 5 (13/05)': '2026-05-13',
+                  'Thứ 6 (14/05)': '2026-05-14', 'Thứ 7 (15/05)': '2026-05-15',
+                  'CN (16/05)': '2026-05-16',
+                };
+                const dayDate = dayDateMap[day];
+                const dynShifts = dayDate ? createdShifts.filter((s) => s.date === dayDate) : [];
+                const allEmpty = dayShifts.length === 0 && dynShifts.length === 0;
+
+                return allEmpty ? (
+                  <p className="mt-8 text-center text-xs font-semibold text-slate-300">Không có ca</p>
+                ) : (
+                  <>
+                    {dayShifts.map((shift, i) => {
+                      const handleClick = shift.warning && shift.alertId
+                        ? () => onWarningClick?.(shift.alertId!)
+                        : () => onShiftClick?.({ label: shift.label, time: shift.time, staff: shift.staff, warning: shift.warning, alertId: shift.alertId });
+                      return (
+                        <WeekShiftCard
+                          key={`${shift.day}-${shift.label}-${i}`}
+                          label={shift.label}
+                          time={shift.time}
+                          staff={shift.staff}
+                          warning={shift.warning}
+                          onClick={handleClick}
+                        />
+                      );
+                    })}
+                    {dynShifts.map((s) => {
+                      const member = staff.find((st) => st.id === s.staffId);
+                      return (
+                        <WeekShiftCard
+                          key={`new-${s.id}`}
+                          label={s.label}
+                          time={s.startTime}
+                          staff={member}
+                          isNew
+                          onClick={() => onShiftClick?.({
+                            label: s.label,
+                            time: `${s.startTime} - ${s.endTime}`,
+                            staff: member!,
+                          })}
+                        />
+                      );
+                    })}
+                  </>
+                );
+              })()}
             </div>
           );
         })}
@@ -676,14 +1054,13 @@ function WeekSchedule({ staff, onWarningClick, onShiftClick }: { staff: Staff[];
 }
 
 /** Compact card specifically designed for the narrow Week View columns */
-function WeekShiftCard({ label, time, staff, warning = false, onClick }: { label: string; time: string; staff?: Staff; warning?: boolean; onClick?: () => void }) {
+function WeekShiftCard({ label, time, staff, warning = false, isNew = false, onClick }: { label: string; time: string; staff?: Staff; warning?: boolean; isNew?: boolean; onClick?: () => void }) {
   const shiftColors: Record<string, string> = {
     'Sáng': 'border-l-emerald-400 bg-emerald-50',
     'Chiều': 'border-l-sky-400 bg-sky-50',
-    'Trưa': 'border-l-amber-400 bg-amber-50',
     'Tối': 'border-l-indigo-400 bg-indigo-50',
   };
-  const colorClass = warning ? 'border-l-rose-400 bg-rose-50' : (shiftColors[label] ?? 'border-l-slate-300 bg-slate-50');
+  const colorClass = warning ? 'border-l-rose-400 bg-rose-50' : isNew ? 'border-l-brand bg-sky-50 ring-1 ring-brand/20' : (shiftColors[label] ?? 'border-l-slate-300 bg-slate-50');
   const interactiveClass = warning && onClick
     ? 'cursor-pointer hover:ring-2 hover:ring-red-400'
     : onClick
@@ -705,6 +1082,9 @@ function WeekShiftCard({ label, time, staff, warning = false, onClick }: { label
         <p className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-rose-500">
           <AlertTriangle size={11} /> Xem cảnh báo →
         </p>
+      ) : null}
+      {isNew ? (
+        <p className="mt-1.5 text-[10px] font-extrabold text-brand">✦ Mới phân công</p>
       ) : null}
     </div>
   );
@@ -815,22 +1195,31 @@ function MonthSchedule({ onDayClick }: { onDayClick?: (day: number) => void }) {
   );
 }
 
-function ShiftCard({ label, time, staff, warning = false, onClick }: { label: string; time: string; staff?: Staff; warning?: boolean; onClick?: () => void }) {
+function ShiftCard({ label, time, staff, warning = false, isNew = false, onClick }: { label: string; time: string; staff?: Staff; warning?: boolean; isNew?: boolean; onClick?: () => void }) {
   const interactiveClass = warning && onClick
     ? 'cursor-pointer hover:ring-2 hover:ring-red-400'
     : onClick
       ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5'
       : '';
 
+  const bgClass = warning
+    ? 'border-rose-300 bg-rose-50 text-rose-600'
+    : isNew
+      ? 'border-brand/30 bg-sky-50 text-slate-700 ring-1 ring-brand/20'
+      : 'border-gray-200 bg-white text-slate-700';
+
   return (
     <div
-      className={`rounded-md border p-3 text-sm shadow-sm transition-all ${warning ? 'border-rose-300 bg-rose-50 text-rose-600' : 'border-gray-200 bg-white text-slate-700'} ${interactiveClass}`}
+      className={`rounded-md border p-3 text-sm shadow-sm transition-all ${bgClass} ${interactiveClass}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
     >
-      <p className="text-xs font-extrabold text-slate-400">{label} · {time}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-extrabold text-slate-400">{label} · {time}</p>
+        {isNew ? <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold text-brand">✦ Mới</span> : null}
+      </div>
       <p className="mt-2 font-extrabold">{staff?.name}</p>
       <p className="text-xs font-semibold">{staff?.specialty}</p>
       {warning ? (
@@ -857,8 +1246,11 @@ function getShiftLocation(staff: Staff): string {
 }
 
 function getShiftStatusInfo(staff: Staff): { text: string; color: string } {
-  if (staff.status === 'active') return { text: 'Đúng giờ', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
-  if (staff.status === 'leave') return { text: 'Nghỉ phép', color: 'text-amber-600 bg-amber-50 border-amber-200' };
+  const attendance = deriveAttendance(staff);
+  if (attendance.attendanceState === 'present') return { text: 'Đúng giờ', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+  if (attendance.attendanceState === 'late') return { text: 'Đi muộn', color: 'text-amber-700 bg-amber-50 border-amber-200' };
+  if (attendance.attendanceState === 'absent') return { text: 'Vắng mặt', color: 'text-rose-600 bg-rose-50 border-rose-200' };
+  if (attendance.attendanceState === 'approvedLeave') return { text: 'Nghỉ phép', color: 'text-brand bg-sky-50 border-sky-200' };
   return { text: 'Chưa đến ca', color: 'text-slate-500 bg-slate-50 border-slate-200' };
 }
 
@@ -879,14 +1271,13 @@ function ShiftDetailModal({ shift, onClose }: { shift: SelectedShift; onClose: (
 
   const shiftColorMap: Record<string, { bg: string; icon: string }> = {
     'Sáng': { bg: 'from-emerald-500 to-teal-600', icon: '🌅' },
-    'Trưa': { bg: 'from-amber-500 to-orange-500', icon: '☀️' },
     'Chiều': { bg: 'from-sky-500 to-blue-600', icon: '🌤️' },
     'Tối': { bg: 'from-indigo-500 to-violet-600', icon: '🌙' },
   };
   const shiftStyle = shiftColorMap[tempLabel] ?? shiftColorMap[shift.label] ?? { bg: 'from-slate-500 to-slate-600', icon: '📋' };
 
   const handleSave = () => {
-    alert('Đã cập nhật ca trực!');
+    // Toast will be shown via parent — shift saved visually
     setIsEditing(false);
   };
 
@@ -1059,6 +1450,244 @@ function ShiftDetailModal({ shift, onClose }: { shift: SelectedShift; onClose: (
     </div>
   );
 }
+function CreateShiftModal({ staff, onClose, onSubmit }: { staff: Staff[]; onClose: () => void; onSubmit: (shift: CreatedShift) => void }) {
+  const availableStaff = staff.filter((s) => {
+    const state = deriveAttendance(s).attendanceState;
+    return state === 'present' || state === 'late' || state === 'upcoming';
+  });
+  const [staffId, setStaffId] = useState('');
+  const [date, setDate] = useState('');
+  const [shiftLabel, setShiftLabel] = useState<ShiftLabel>('Sáng');
+  const [startTime, setStartTime] = useState(shiftTimeDefaults['Sáng'].start);
+  const [endTime, setEndTime] = useState(shiftTimeDefaults['Sáng'].end);
+  const [location, setLocation] = useState('');
+  const [note, setNote] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Auto-fill times when shift label changes
+  const handleShiftLabelChange = (label: ShiftLabel) => {
+    setShiftLabel(label);
+    setStartTime(shiftTimeDefaults[label].start);
+    setEndTime(shiftTimeDefaults[label].end);
+  };
+
+  // Validation
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const errors: Record<string, string> = {};
+  if (!staffId) errors.staffId = 'Vui lòng chọn nhân sự';
+  if (!date) errors.date = 'Vui lòng chọn ngày trực';
+  else if (date < todayStr) errors.date = 'Không thể chọn ngày trong quá khứ';
+  if (!location.trim()) errors.location = 'Vui lòng nhập vị trí làm việc. VD: Phòng khám 102';
+  const isValid = Object.keys(errors).length === 0;
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setTouched({ staffId: true, date: true, location: true });
+    if (!isValid) return;
+    onSubmit({
+      id: `CS-${Date.now()}`,
+      staffId,
+      date,
+      label: shiftLabel,
+      startTime,
+      endTime,
+      location: location.trim(),
+      note: note.trim(),
+    });
+  };
+
+  const selectedStaff = staff.find((s) => s.id === staffId);
+
+  const shiftColorMap: Record<ShiftLabel, { bg: string; icon: string }> = {
+    'Sáng': { bg: 'from-emerald-500 to-teal-600', icon: '🌅' },
+    'Chiều': { bg: 'from-sky-500 to-blue-600', icon: '🌤️' },
+    'Tối': { bg: 'from-indigo-500 to-violet-600', icon: '🌙' },
+    'Cả ngày': { bg: 'from-amber-500 to-orange-500', icon: '☀️' },
+  };
+  const shiftStyle = shiftColorMap[shiftLabel];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Phân công ca trực mới"
+    >
+      <div className="w-full max-w-lg animate-[modalIn_0.25s_ease-out] rounded-2xl bg-white shadow-2xl">
+        {/* ── Header ── */}
+        <div className={`relative rounded-t-2xl bg-gradient-to-r ${shiftStyle.bg} px-5 py-4`}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+            aria-label="Đóng"
+          >
+            <X size={18} />
+          </button>
+          <p className="text-sm font-semibold text-white/80">Phân công ca trực mới</p>
+          <p className="mt-1 text-lg font-bold text-white">
+            {shiftStyle.icon} Ca {shiftLabel} · {startTime} - {endTime}
+          </p>
+        </div>
+
+        {/* ── Form ── */}
+        <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
+          {/* Staff select */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Nhân sự <span className="text-rose-500">*</span>
+            </label>
+            <select
+              className={`form-input w-full cursor-pointer ${touched.staffId && errors.staffId ? 'border-rose-400 ring-1 ring-rose-200' : ''}`}
+              value={staffId}
+              onChange={(e) => { setStaffId(e.target.value); setTouched((t) => ({ ...t, staffId: true })); }}
+              onBlur={() => setTouched((t) => ({ ...t, staffId: true }))}
+            >
+              <option value="">-- Chọn nhân sự --</option>
+              {availableStaff.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} — {s.role} ({s.specialty})
+                </option>
+              ))}
+            </select>
+            {touched.staffId && errors.staffId ? (
+              <p className="mt-1 text-xs font-semibold text-rose-500" role="alert">{errors.staffId}</p>
+            ) : null}
+            {selectedStaff ? (
+              <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-400">
+                  <UserRound size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-700">{selectedStaff.name}</p>
+                  <p className="text-xs text-slate-400">{selectedStaff.role} · {selectedStaff.specialty} · {selectedStaff.id}</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Date + Shift type row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Ngày trực <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                className={`form-input w-full ${touched.date && errors.date ? 'border-rose-400 ring-1 ring-rose-200' : ''}`}
+                value={date}
+                min={todayStr}
+                onChange={(e) => { setDate(e.target.value); setTouched((t) => ({ ...t, date: true })); }}
+                onBlur={() => setTouched((t) => ({ ...t, date: true }))}
+              />
+              {touched.date && errors.date ? (
+                <p className="mt-1 text-xs font-semibold text-rose-500" role="alert">{errors.date}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Ca trực <span className="text-rose-500">*</span>
+              </label>
+              <select
+                className="form-input w-full cursor-pointer"
+                value={shiftLabel}
+                onChange={(e) => handleShiftLabelChange(e.target.value as ShiftLabel)}
+              >
+                <option value="Sáng">🌅 Sáng (08:00 - 12:00)</option>
+                <option value="Chiều">🌤️ Chiều (13:00 - 17:00)</option>
+                <option value="Tối">🌙 Tối (18:00 - 22:00)</option>
+                <option value="Cả ngày">☀️ Cả ngày (08:00 - 17:00)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Time row (auto-filled, editable) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Giờ bắt đầu</label>
+              <input
+                type="time"
+                className="form-input w-full"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Giờ kết thúc</label>
+              <input
+                type="time"
+                className="form-input w-full"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Vị trí làm việc <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              className={`form-input w-full ${touched.location && errors.location ? 'border-rose-400 ring-1 ring-rose-200' : ''}`}
+              placeholder="VD: Phòng khám 102, Quầy tiếp đón 1..."
+              value={location}
+              onChange={(e) => { setLocation(e.target.value); setTouched((t) => ({ ...t, location: true })); }}
+              onBlur={() => setTouched((t) => ({ ...t, location: true }))}
+            />
+            {touched.location && errors.location ? (
+              <p className="mt-1 text-xs font-semibold text-rose-500" role="alert">{errors.location}</p>
+            ) : null}
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Ghi chú <span className="text-xs text-slate-400">(tùy chọn)</span>
+            </label>
+            <textarea
+              className="form-input w-full resize-none"
+              rows={2}
+              placeholder="VD: Thay thế cho BS. Trần Văn C nghỉ phép..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+        </form>
+
+        {/* ── Footer ── */}
+        <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-gray-100 px-5 text-sm font-extrabold text-gray-700 transition hover:bg-gray-200"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="button"
+            onClick={(e) => handleSubmit(e as unknown as FormEvent)}
+            disabled={!isValid && Object.keys(touched).length > 0}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1f7fb9] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus size={15} />
+            Lưu phân công
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AlertsTab({ staff, selectedAlertId, onSelectAlert, onAssign }: { staff: Staff[]; selectedAlertId: string; onSelectAlert: (id: string) => void; onAssign: (staff: Staff) => void }) {
   const selectedAlert = alerts.find((alert) => alert.id === selectedAlertId) ?? alerts[0];
@@ -1159,10 +1788,12 @@ function SelectMenu({ value, options, onChange }: { value: string; options: stri
   );
 }
 
-function StaffStatusBadge({ status }: { status: StaffStatus }) {
-  const tone: Record<StaffStatus, string> = {
-    active: 'bg-emerald-100 text-emerald-700 border-transparent',
-    leave: 'bg-slate-100 text-slate-500 border-transparent',
+function AttendanceStateBadge({ status }: { status: AttendanceState }) {
+  const tone: Record<AttendanceState, string> = {
+    present: 'bg-emerald-100 text-emerald-700 border-transparent',
+    late: 'bg-amber-100 text-amber-700 border-transparent',
+    absent: 'bg-rose-100 text-rose-700 border-transparent',
+    approvedLeave: 'bg-sky-100 text-brand border-transparent',
     upcoming: 'bg-white text-slate-500 border-slate-300',
   };
 
@@ -1268,8 +1899,10 @@ function fromIsoWeekInput(value: string) {
   return monday;
 }
 
-const statusLabels: Record<StaffStatus, string> = {
-  active: 'Đang trực',
-  leave: 'Nghỉ phép',
+const statusLabels: Record<AttendanceState, string> = {
+  present: 'Đang trực',
+  late: 'Đi muộn',
+  absent: 'Vắng mặt',
+  approvedLeave: 'Nghỉ phép',
   upcoming: 'Chưa đến ca',
 };

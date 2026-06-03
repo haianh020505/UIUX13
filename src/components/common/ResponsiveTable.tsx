@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 export default function ResponsiveTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
+      <table className="min-w-full table-fixed text-left text-sm">
         <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
           <tr>
             {columns.map((column) => (

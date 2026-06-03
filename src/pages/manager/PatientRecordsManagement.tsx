@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Download, Search, X } from 'lucide-react';
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import ResponsiveTable from '../../components/common/ResponsiveTable';
+import { mockPatients } from '../../data/clinicMock';
 import ConfirmDialog from './components/ConfirmDialog';
 import DateInput, { parseDisplayDate } from './components/DateInput';
 import Field from './components/Field';
@@ -339,8 +340,49 @@ const chatTimeFilters = ['Tất cả thời gian', 'Năm 2026', 'Năm 2025'];
 const chatResultFilters = ['Kết quả', 'Đã chuyển BS', 'Tự xử lý', 'Cung cấp thông tin'];
 const genderOptions = ['Nam', 'Nữ', 'Khác'];
 
+const standardizedPatients: Patient[] = mockPatients.map((patient, index) => ({
+  id: patient.code,
+  name: patient.name,
+  birthDate: patient.birthDate,
+  gender: patient.gender,
+  phone: patient.phone,
+  nationalId: patient.nationalId,
+  insuranceId: patient.insuranceId,
+  address: patient.address,
+  emergencyContact: patient.emergencyContact,
+  specialty: patient.specialty,
+  lastVisitDate: patient.visits[0].date,
+  lastVisitSummary: `${patient.visits[0].date} (${patient.specialty})`,
+  lastDoctor: patient.visits[0].doctor,
+  visits: patient.visits.map((visit) => ({
+    date: visit.date,
+    specialty: visit.department.replace('Khoa ', ''),
+    doctor: visit.doctor,
+    diagnosis: visit.diagnosis,
+    prescription: visit.prescriptions?.map((item) => `${item.name} x ${item.quantity}`).join('; ') || 'Theo dõi và tái khám khi cần.',
+    note: visit.note,
+  })),
+  chats: [
+    {
+      id: `CHAT-${patient.code}-1`,
+      date: patient.visits[0].date,
+      time: `${String(8 + (index % 8)).padStart(2, '0')}:${index % 2 ? '30' : '10'} AM`,
+      symptom: patient.visits[0].reason,
+      result: index % 3 === 0 ? 'self-care' : index % 4 === 0 ? 'info-only' : 'transferred',
+      resultText: index % 3 === 0 ? 'Tự xử lý: Đã tư vấn hướng dẫn chăm sóc.' : index % 4 === 0 ? 'Cung cấp thông tin (Chưa đặt lịch).' : `Khám ${patient.specialty} (Đã chuyển BS)`,
+      appointment: index % 3 === 0 ? undefined : `${String(8 + (index % 8)).padStart(2, '0')}:00 - ${String(8 + (index % 8)).padStart(2, '0')}:30 (${patient.visits[0].date})`,
+      messages: [
+        { from: 'patient', text: `Tôi cần tư vấn về ${patient.visits[0].reason.toLocaleLowerCase('vi-VN')}.` },
+        { from: 'ai', text: 'Bạn có triệu chứng nặng như khó thở, sốt cao hoặc đau tăng nhanh không?' },
+        { from: 'patient', text: 'Hiện tại triệu chứng ở mức theo dõi.' },
+        { from: 'ai', text: 'Bạn nên đặt lịch khám để bác sĩ đánh giá trực tiếp nếu triệu chứng kéo dài.' },
+      ],
+    },
+  ],
+}));
+
 export default function PatientRecordsManagement({ onNotify }: { onNotify?: (message: string) => void }) {
-  const [patients, setPatients] = useState(initialPatients);
+  const [patients, setPatients] = useState(standardizedPatients);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [specialty, setSpecialty] = useState(specialties[0]);
@@ -405,7 +447,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
   return (
     <div>
       <h1 className="mb-4 text-xl font-bold text-slate-800">Hồ sơ bệnh nhân</h1>
-      <section className="panel flex min-h-[620px] flex-col p-0">
+      <section className="panel flex flex-col p-0">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="grid flex-1 gap-3 md:grid-cols-[minmax(260px,1fr)_220px_190px]">
             <label className="relative">
@@ -485,7 +527,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
                 type="button"
                 onClick={() => setPage(pageNumber)}
                 className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-bold transition ${
-                  page === pageNumber ? 'bg-blue-500 text-white shadow-sm' : 'text-blue-500 hover:bg-slate-50'
+                  page === pageNumber ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
                 }`}
               >
                 {pageNumber}
@@ -622,7 +664,7 @@ function ProfileTab({ patient, onSave }: { patient: Patient; onSave: (patient: P
 
 function VisitsTab({ visits }: { visits: Visit[] }) {
   return (
-    <section className="panel min-h-[520px]">
+    <section className="panel">
       <h2 className="panel-title">Các lần khám trước đây</h2>
       <div className="mt-7 space-y-4 border-l-2 border-dashed border-slate-200 pl-6">
         {visits.map((visit, index) => (
@@ -659,7 +701,7 @@ function ChatbotTab({ chats }: { chats: ChatSession[] }) {
   });
 
   return (
-    <section className="panel min-h-[520px] p-0">
+    <section className="panel p-0">
       <div className="flex flex-col gap-4 border-b border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between">
         <h2 className="panel-title">Lịch sử tương tác với AI</h2>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -728,7 +770,7 @@ function SelectMenu({ value, options, onChange }: { value: string; options: stri
 
 function ChatModal({ chat, onClose }: { chat: ChatSession; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>

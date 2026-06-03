@@ -7,3 +7,31 @@
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/UIUX13/[39m
 [2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m4:18:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:18:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:18:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/DoctorDashboard.tsx, /src/pages/doctor/components/DoctorSidebar.tsx, /src/pages/doctor/views/RecordsView.tsx, /src/pages/doctor/views/AppointmentsView.tsx, /src/pages/doctor/views/ExamView.tsx, /src/pages/doctor/components/dashboard/DoctorDashboardHome.tsx, /src/pages/doctor/components/dashboard/RecentLabResults.tsx, /src/pages/doctor/components/dashboard/WaitingListTable.tsx[22m
+[2m4:19:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/DoctorDashboardHome.tsx[22m
+[2m4:19:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/WaitingListTable.tsx[22m
+[2m4:30:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:30:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/DoctorDashboard.tsx, /src/pages/doctor/components/DoctorSidebar.tsx, /src/pages/doctor/views/RecordsView.tsx, /src/pages/doctor/views/AppointmentsView.tsx, /src/pages/doctor/views/ExamView.tsx, /src/pages/doctor/components/dashboard/DoctorDashboardHome.tsx, /src/pages/doctor/components/dashboard/RecentLabResults.tsx, /src/pages/doctor/components/dashboard/WaitingListTable.tsx[22m
+[2m4:31:17 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/doctor/DoctorDashboard.tsx, /src/styles.css[22m
+[2m4:31:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/DoctorDashboardHome.tsx[22m
+[2m4:32:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/WaitingListTable.tsx[22m
+[2m4:32:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/shared.tsx[22m
+[2m4:32:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/DoctorSidebar.tsx[22m
+[2m4:33:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/DoctorHeader.tsx[22m
+[2m4:33:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/KpiCards.tsx[22m
+[2m4:33:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/RecentLabResults.tsx[22m
+[2m4:33:58 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/Toast.tsx[22m
+[2m4:34:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/views/ExamView.tsx[22m
+[2m4:34:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/views/RecordsView.tsx[22m
+[2m4:34:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/views/OrdersView.tsx[22m
+[2m4:35:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/views/ConsultationView.tsx[22m
+[2m4:35:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/views/AccountView.tsx[22m
+[2m4:40:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/components/common/LogoMark.tsx[22m
+[2m4:44:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:44:17 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/DoctorDashboard.tsx, /src/pages/doctor/components/DoctorSidebar.tsx, /src/pages/doctor/views/RecordsView.tsx, /src/pages/doctor/views/AppointmentsView.tsx, /src/pages/doctor/views/ExamView.tsx, /src/pages/doctor/components/dashboard/DoctorDashboardHome.tsx, /src/pages/doctor/components/dashboard/RecentLabResults.tsx, /src/pages/doctor/components/dashboard/WaitingListTable.tsx[22m
+[2m4:44:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/DoctorSidebar.tsx[22m
+[2m4:44:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/DoctorHeader.tsx[22m
+[2m4:45:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/components/common/LogoMark.tsx[22m
+[2m4:45:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/pages/doctor/components/dashboard/KpiCards.tsx[22m

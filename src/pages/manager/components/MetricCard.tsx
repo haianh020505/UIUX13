@@ -35,7 +35,7 @@ export default function MetricCard({
     .join(' ');
 
   return (
-    <article className={`relative overflow-hidden rounded-lg border border-slate-200 bg-gradient-to-br ${accent} bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}>
+    <article className={`relative overflow-hidden rounded-lg border border-slate-200 bg-gradient-to-br ${accent} bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}>
       <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/50" />
       <div className="relative flex items-start justify-between gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-4 ring-white/55 ${tint}`}>
@@ -46,7 +46,7 @@ export default function MetricCard({
           {trend}
         </span>
       </div>
-      <div className="relative mt-4">
+      <div className="relative mt-3">
         <p className="text-sm font-medium text-slate-500">{label}</p>
         <p className="text-xs text-slate-400">{hint}</p>
         <div className="mt-2 flex items-end gap-2">
@@ -54,7 +54,7 @@ export default function MetricCard({
           {suffix ? <span className="pb-1 text-sm font-extrabold text-slate-700">{suffix}</span> : null}
         </div>
       </div>
-      <div className="relative mt-4 flex items-end gap-3">
+      <div className="relative mt-3 flex items-end gap-3">
         <div className="min-w-0 flex-1">
           <div className="h-1.5 overflow-hidden rounded-full bg-white/70">
             <div className="h-full rounded-full bg-brand" style={{ width: `${progress}%` }} />

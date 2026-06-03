@@ -15,17 +15,17 @@ const slides = [
   {
     title: 'Sàng lọc thông minh 24/7',
     description: 'Theo dõi triệu chứng và nhận gợi ý phân luồng nhanh trong môi trường y tế số.',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1400&q=80',
+    image: import.meta.env.BASE_URL + 'images/slide-1.png',
   },
   {
     title: 'Đội ngũ chuyên gia hàng đầu',
     description: 'Kết nối bệnh nhân với bác sĩ và chuyên gia phù hợp theo từng nhu cầu chăm sóc.',
-    image: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1400&q=80',
+    image: import.meta.env.BASE_URL + 'images/slide-2.png',
   },
   {
     title: 'Đặt lịch nhanh chóng, không chờ đợi',
     description: 'Quản lý lịch hẹn rõ ràng, giảm thao tác lặp lại và tối ưu trải nghiệm khám bệnh.',
-    image: 'https://images.unsplash.com/photo-1666214280391-8ff5bd3c0bf0?auto=format&fit=crop&w=1400&q=80',
+    image: import.meta.env.BASE_URL + 'images/slide-3.png',
   },
 ];
 
@@ -65,7 +65,7 @@ const devRoles: Array<{ label: string; user: MockUser }> = [
 
 export default function App() {
   return (
-    <main className="min-h-screen bg-[#f4f7fa] md:flex">
+    <main className="md:flex md:h-screen">
       <AuthSlider />
       <AuthFlow />
     </main>
@@ -92,7 +92,7 @@ function AuthSlider() {
 
   return (
     <section
-      className="group relative hidden min-h-screen w-1/2 overflow-hidden bg-slate-900 md:block"
+      className="group relative hidden h-screen w-1/2 overflow-hidden bg-slate-900 md:block"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       aria-label="TriageAI feature slider"
@@ -111,7 +111,7 @@ function AuthSlider() {
         </article>
       ))}
 
-      <div className="relative z-10 flex h-full min-h-screen flex-col justify-end px-12 pb-24 text-white lg:px-16">
+      <div className="relative z-10 flex h-full flex-col justify-end px-12 pb-24 text-white lg:px-16">
         <div className="max-w-xl">
           <p className="mb-4 inline-flex items-center rounded-md bg-white/15 px-3 py-1 text-sm font-medium backdrop-blur-sm">
             TriageAI
@@ -274,7 +274,7 @@ function AuthFlow() {
   }, [countdown, step]);
 
   return (
-    <section className="flex min-h-screen w-full items-center justify-center bg-[#f4f7fa] px-5 py-10 md:w-1/2 lg:px-12">
+    <section className="flex h-screen w-full items-center justify-center overflow-y-auto bg-[#f4f7fa] px-5 py-10 md:w-1/2 lg:px-12">
       {step === 'login' ? (
         <LoginCard
           identifier={identifier}
@@ -617,7 +617,7 @@ function ForgotPasswordCard({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <AuthCard highlighted compact>
+    <AuthCard compact>
       <CardHeader
         title="Quên mật khẩu?"
         subtitle="Vui lòng nhập Email hoặc Số điện thoại đã đăng ký. Chúng tôi sẽ gửi mã xác nhận để khôi phục tài khoản."
@@ -757,7 +757,7 @@ function ResetPasswordCard({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <AuthCard highlighted>
+    <AuthCard compact>
       <CardHeader
         title="Đặt lại mật khẩu"
         subtitle="Mật khẩu mới của bạn phải khác với những mật khẩu đã sử dụng trước đó."
@@ -809,9 +809,7 @@ function AuthCard({
 }) {
   return (
     <div
-      className={`w-full rounded-2xl bg-white px-8 py-12 shadow-sm transition md:px-10 ${
-        compact ? 'max-w-md' : 'max-w-lg'
-      } ${highlighted ? 'border-4 border-brand' : 'border border-white'}`}
+      className={`w-full max-w-lg rounded-2xl bg-white px-8 py-12 shadow-sm transition md:px-10 ${highlighted ? 'border-4 border-brand' : 'border border-white'}`}
     >
       {children}
     </div>
