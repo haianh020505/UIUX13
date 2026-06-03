@@ -9,8 +9,12 @@ import PatientDashboardHome from './PatientDashboardHome';
 import PatientConsultation from './PatientConsultation';
 import PatientAppointments from './PatientAppointments';
 import PatientBooking from './PatientBooking';
+import PatientArticles from './PatientArticles';
+import PatientHealthRecords from './PatientHealthRecords';
+import PatientAccount from './PatientAccount';
 import { patientMenu, patientNotifications } from './data';
-import type { PatientPage, BookingContext } from './types';
+import type { AppointmentData, PatientPage, BookingContext } from './types';
+import { initialAppointments } from './data';
 
 export default function PatientDashboard() {
   const navigate = useNavigate();
@@ -21,8 +25,13 @@ export default function PatientDashboard() {
 
   /* ── Booking module state ── */
   const [bookingContext, setBookingContext] = useState<BookingContext | null>(null);
+  const [bookingSourcePage, setBookingSourcePage] = useState<PatientPage>('appointments');
   const [apptDefaultTab, setApptDefaultTab] = useState<'upcoming' | 'pending' | 'history' | undefined>(undefined);
   const [apptToast, setApptToast] = useState<string | null>(null);
+
+  /* ── Persistent appointments state (lifted from PatientAppointments) ── */
+  const [appointments, setAppointments] = useState<AppointmentData[]>(initialAppointments);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 
   const user = JSON.parse(localStorage.getItem('triageai_user') || 'null') as {
     role?: string;
@@ -47,6 +56,21 @@ export default function PatientDashboard() {
     if (nextPage !== 'booking') {
       setBookingContext(null);
     }
+    /* Reset stale appointment tab/toast so they don't replay on re-entry */
+    if (nextPage !== 'appointments') {
+      setApptDefaultTab(undefined);
+      setApptToast(null);
+    }
+    if (nextPage !== 'articles') {
+      setSelectedArticleId(null);
+    } else {
+      setSelectedArticleId(null);
+    }
+  };
+
+  const handleArticleClick = (articleId: string) => {
+    setSelectedArticleId(articleId);
+    setPage('articles');
   };
 
   const openNotificationTarget = (notification: NotificationItem) => {
@@ -71,23 +95,25 @@ export default function PatientDashboard() {
 
   /* ── Navigate to booking wizard ── */
   const handleNavigateToBooking = (ctx: BookingContext) => {
+    setBookingSourcePage(page);   // remember which page the user came from
     setBookingContext(ctx);
     setPage('booking');
     setMobileOpen(false);
   };
 
   /* ── Complete booking wizard → back to appointments ── */
-  const handleBookingComplete = (_summary: string) => {
+  const handleBookingComplete = (newAppointment: AppointmentData) => {
+    setAppointments((prev) => [newAppointment, ...prev]);
     setBookingContext(null);
     setApptDefaultTab('pending');
     setApptToast('Đặt lịch thành công! Phòng khám sẽ xác nhận trong 24 giờ.');
     setPage('appointments');
   };
 
-  /* ── Back from booking → appointments ── */
+  /* ── Back from booking → return to source page ── */
   const handleBookingBack = () => {
     setBookingContext(null);
-    setPage('appointments');
+    setPage(bookingSourcePage === 'dashboard' ? 'dashboard' : 'appointments');
   };
 
   const today = new Intl.DateTimeFormat('vi-VN', {
@@ -220,7 +246,12 @@ export default function PatientDashboard() {
         ) : (
           <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
             {page === 'dashboard' ? (
-              <PatientDashboardHome onNavigate={openPage} userName={userName} />
+              <PatientDashboardHome
+                onNavigate={openPage}
+                onNavigateToBooking={handleNavigateToBooking}
+                onArticleClick={handleArticleClick}
+                userName={userName}
+              />
             ) : null}
 
             {page === 'appointments' ? (
@@ -228,6 +259,8 @@ export default function PatientDashboard() {
                 onNavigateToBooking={handleNavigateToBooking}
                 defaultTab={apptDefaultTab}
                 toast={apptToast}
+                appointments={appointments}
+                onAppointmentsChange={setAppointments}
               />
             ) : null}
 
@@ -239,7 +272,22 @@ export default function PatientDashboard() {
               />
             ) : null}
 
-            {page !== 'dashboard' && page !== 'appointments' && page !== 'booking' ? (
+            {page === 'articles' ? (
+              <PatientArticles
+                selectedArticleId={selectedArticleId}
+                onCloseArticle={() => setSelectedArticleId(null)}
+              />
+            ) : null}
+
+            {page === 'health-records' ? (
+              <PatientHealthRecords />
+            ) : null}
+
+            {page === 'account' ? (
+              <PatientAccount onLogout={() => setConfirmLogout(true)} />
+            ) : null}
+
+            {page !== 'dashboard' && page !== 'appointments' && page !== 'booking' && page !== 'articles' && page !== 'health-records' && page !== 'account' ? (
               <PlaceholderPanel
                 title={activeLabel}
                 onBack={() => setPage('dashboard')}

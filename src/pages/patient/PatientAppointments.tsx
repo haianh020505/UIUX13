@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CalendarPlus, MapPin, Clock, CheckCircle2, Download, FileText, Pill, X } from 'lucide-react';
 import ConfirmDialog from '../manager/components/ConfirmDialog';
-import { initialAppointments } from './data';
 import type { AppointmentData, AppointmentStatus, BookingContext } from './types';
 
 type TabId = 'upcoming' | 'pending' | 'history';
@@ -51,13 +50,16 @@ export default function PatientAppointments({
   onNavigateToBooking,
   defaultTab,
   toast: externalToast,
+  appointments,
+  onAppointmentsChange,
 }: {
   onNavigateToBooking: (ctx: BookingContext) => void;
   defaultTab?: TabId;
   toast?: string | null;
+  appointments: AppointmentData[];
+  onAppointmentsChange: (updater: AppointmentData[] | ((prev: AppointmentData[]) => AppointmentData[])) => void;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab ?? 'upcoming');
-  const [appointments, setAppointments] = useState<AppointmentData[]>(initialAppointments);
   const [cancelTarget, setCancelTarget] = useState<AppointmentData | null>(null);
   const [detailTarget, setDetailTarget] = useState<AppointmentData | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -108,7 +110,7 @@ export default function PatientAppointments({
   /* ── Cancel flow ── */
   const handleCancelConfirm = () => {
     if (!cancelTarget) return;
-    setAppointments((prev) =>
+    onAppointmentsChange((prev) =>
       prev.map((a) => (a.id === cancelTarget.id ? { ...a, status: 'cancelled' as AppointmentStatus } : a)),
     );
     setCancelTarget(null);
@@ -125,6 +127,7 @@ export default function PatientAppointments({
     onNavigateToBooking({
       isReschedule: true,
       fromAppointment: appt,
+      source: 'appointment-history',
       prefilledSpecialty: appt.specialty,
       prefilledDoctor: appt.doctor,
       startStep: 2,
@@ -136,6 +139,7 @@ export default function PatientAppointments({
     onNavigateToBooking({
       isReschedule: false,
       fromAppointment: appt,
+      source: 'appointment-history',
       prefilledSpecialty: appt.specialty,
       prefilledDoctor: appt.doctor,
       startStep: 2,
@@ -198,7 +202,7 @@ export default function PatientAppointments({
           <button
             type="button"
             className="appt-btn-primary"
-            onClick={() => onNavigateToBooking({ isReschedule: false, fromAppointment: null })}
+            onClick={() => onNavigateToBooking({ isReschedule: false, fromAppointment: null, source: 'manual', startStep: 1 })}
           >
             <CalendarPlus size={16} />
             Đặt lịch khám mới
@@ -258,7 +262,7 @@ export default function PatientAppointments({
               <button
                 type="button"
                 className="appt-btn-primary"
-                onClick={() => onNavigateToBooking({ isReschedule: false, fromAppointment: null })}
+                onClick={() => onNavigateToBooking({ isReschedule: false, fromAppointment: null, source: 'manual', startStep: 1 })}
               >
                 <CalendarPlus size={16} />
                 Đặt lịch khám mới

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, MapPin, Minus, PenLine, Plus, Star, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, MapPin, Star, User } from 'lucide-react';
 import { specialtyOptions, doctorOptions, doctorSchedules } from './data';
-import type { SpecialtyOption, TimeSlot, BookingContext } from './types';
+import type { AppointmentData, SpecialtyOption, TimeSlot, BookingContext } from './types';
+import { MedicalSpecialtyIcon } from './MedicalSpecialtyIcon';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -13,6 +14,16 @@ function getInitials(name: string) {
   return parts[0].substring(0, 2).toUpperCase();
 }
 
+function getInitialCardDates() {
+  const init: Record<string, string> = {};
+  for (const sched of doctorSchedules) {
+    if (sched.dates.length > 0) {
+      init[sched.doctorId] = sched.dates[0].value;
+    }
+  }
+  return init;
+}
+
 export default function PatientBooking({
   context,
   onBack,
@@ -20,8 +31,10 @@ export default function PatientBooking({
 }: {
   context: BookingContext;
   onBack: () => void;
-  onComplete: (newAppointmentSummary: string) => void;
+  onComplete: (newAppointment: AppointmentData) => void;
 }) {
+  const isAiBooking = context.source === 'ai-triage' && Boolean(context.prefilledReason);
+
   /* ── State ── */
   const [step, setStep] = useState<WizardStep>(context.startStep ?? 1);
   const [selectedSpecialty, setSelectedSpecialty] = useState<SpecialtyOption | null>(
@@ -39,30 +52,17 @@ export default function PatientBooking({
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   /* Track which date each card is currently viewing */
-  const [cardDates, setCardDates] = useState<Record<string, string>>(() => {
-    const init: Record<string, string> = {};
-    for (const sched of doctorSchedules) {
-      if (sched.dates.length > 0) {
-        init[sched.doctorId] = sched.dates[0].value;
-      }
-    }
-    return init;
-  });
+  const [cardDates, setCardDates] = useState<Record<string, string>>(getInitialCardDates);
 
   /* Step 3 — confirmation fields */
-  const [isAiMode, setIsAiMode] = useState(true);
-  const [reason, setReason] = useState(
-    context.fromAppointment
-      ? `Tái khám sau tư vấn online: ${context.fromAppointment.reason}`
-      : context.prefilledReason
-      ? context.prefilledReason
-      : 'Tái khám sau tư vấn online: Ho khan, đau họng 1–2 ngày, không sốt, chưa dùng thuốc.',
-  );
-  const [notes, setNotes] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
+  const [reason, setReason] = useState(isAiBooking ? context.prefilledReason ?? '' : '');
   const [submitting, setSubmitting] = useState(false);
 
   /* ── Derived data ── */
+  const visibleDoctors = selectedSpecialty
+    ? doctorOptions.filter((doc) => doc.specialty === selectedSpecialty.name)
+    : [];
+
   const selectedDoctor = selectedDoctorId
     ? doctorOptions.find((d) => d.id === selectedDoctorId) ?? null
     : null;
@@ -78,10 +78,7 @@ export default function PatientBooking({
     switch (step) {
       case 1: return selectedSpecialty !== null;
       case 2: return selectedDoctorId !== null && selectedSlot !== null && selectedDate !== '';
-      case 3: {
-        if (isAiMode) return reason.trim().length > 0;
-        return reason.trim().length > 0;
-      }
+      case 3: return reason.trim().length > 0;
       default: return false;
     }
   };
@@ -101,10 +98,19 @@ export default function PatientBooking({
   };
 
   const handleConfirm = () => {
+    if (!selectedDoctor || !selectedSpecialty || !selectedSlot || !selectedDate) return;
     setSubmitting(true);
     window.setTimeout(() => {
-      const summary = `${selectedDoctor?.name} — ${selectedSpecialty?.name} — ${selectedDate} ${selectedSlot?.time}`;
-      onComplete(summary);
+      onComplete({
+        id: `appt-new-${Date.now()}`,
+        date: selectedDate,
+        time: selectedSlot.time,
+        doctor: selectedDoctor.name,
+        specialty: selectedSpecialty.name,
+        location: selectedDoctor.location,
+        reason: reason.trim(),
+        status: 'pending',
+      });
     }, 1500);
   };
 
@@ -127,22 +133,12 @@ export default function PatientBooking({
     }
   };
 
-  /* ── Toggle AI / Manual mode ── */
-  const handleModeToggle = () => {
-    if (isAiMode) {
-      /* Switching to manual → clear prefilled reason */
-      setReason('');
-    } else {
-      /* Switching to AI → restore prefilled reason */
-      setReason(
-        context.fromAppointment
-          ? `Tái khám sau tư vấn online: ${context.fromAppointment.reason}`
-          : context.prefilledReason
-          ? context.prefilledReason
-          : 'Tái khám sau tư vấn online: Ho khan, đau họng 1–2 ngày, không sốt, chưa dùng thuốc.',
-      );
-    }
-    setIsAiMode(!isAiMode);
+  const handleSpecialtySelect = (specialty: SpecialtyOption) => {
+    setSelectedSpecialty(specialty);
+    setSelectedDoctorId(null);
+    setSelectedSlot(null);
+    setSelectedDate('');
+    setCardDates(getInitialCardDates());
   };
 
   return (
@@ -151,7 +147,7 @@ export default function PatientBooking({
       <div className="wizard-header">
         <button type="button" className="btn-ghost" onClick={onBack}>
           <ArrowLeft size={16} />
-          Quay lại lịch hẹn
+          Quay lại
         </button>
         <h1>Đặt lịch khám mới</h1>
       </div>
@@ -200,9 +196,9 @@ export default function PatientBooking({
               key={sp.id}
               type="button"
               className={`specialty-card${selectedSpecialty?.id === sp.id ? ' specialty-card--selected' : ''}`}
-              onClick={() => setSelectedSpecialty(sp)}
+              onClick={() => handleSpecialtySelect(sp)}
             >
-              <span className="specialty-card__icon">{sp.icon}</span>
+              <MedicalSpecialtyIcon id={sp.id} size={32} />
               <span className="specialty-card__name">{sp.name}</span>
               <span className="specialty-card__count">{sp.doctorCount} bác sĩ</span>
             </button>
@@ -213,7 +209,13 @@ export default function PatientBooking({
       {/* ═══ STEP 2 — Chọn bác sĩ & giờ (BookingCare + Horizontal Date Scroller) ═══ */}
       {step === 2 ? (
         <div className="doctor-list">
-          {doctorOptions.map((doc) => {
+          {visibleDoctors.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+              <p className="text-sm font-bold text-slate-600">Chưa có bác sĩ khả dụng cho chuyên khoa này.</p>
+            </div>
+          ) : null}
+
+          {visibleDoctors.map((doc) => {
             const schedule = doctorSchedules.find((s) => s.doctorId === doc.id);
             const currentDateValue = cardDates[doc.id] ?? schedule?.dates[0]?.value ?? '';
             const currentDateOption = schedule?.dates.find((d) => d.value === currentDateValue);
@@ -388,29 +390,17 @@ export default function PatientBooking({
             <p className="patient-info-block__hint">Thông tin được lấy từ hồ sơ tài khoản của bạn</p>
           </div>
 
-          {/* ── Toggle AI / Manual ── */}
-          <div className="toggle-row">
-            <span className="toggle-row__label">
-              Nguồn lý do khám
-            </span>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={isAiMode}
-                onChange={handleModeToggle}
-              />
-              <span className="toggle-switch__track" />
-              <span className="toggle-switch__text">
-                {isAiMode ? 'Từ AI Triage' : 'Nhập thủ công'}
-              </span>
-            </label>
-          </div>
+          {/* ── AI source context ── */}
+          {isAiBooking ? (
+            <div className="toggle-row">
+              <span className="toggle-row__label">Nguồn lý do khám</span>
+              <span className="toggle-switch__text">Từ AI Triage</span>
+            </div>
+          ) : null}
 
-          {/* ── STATE 1: AI Autofill Banner ── */}
-          {isAiMode ? (
+          {isAiBooking ? (
             <div className="autofill-banner">
-              <span>✨ Đã tự điền lý do khám từ phiên tư vấn AI ngày 20/05/2026.</span>
-              <button type="button" className="btn-text">Chỉnh sửa</button>
+              <span>Đã tự điền từ phiên tư vấn AI.</span>
             </div>
           ) : null}
 
@@ -418,53 +408,20 @@ export default function PatientBooking({
           <div className="booking-form-group">
             <label htmlFor="booking-reason">
               Lý do khám
-              {!isAiMode ? <span className="required-star">*</span> : null}
+              <span className="required-star">*</span>
             </label>
             <textarea
               id="booking-reason"
               className="booking-textarea"
               rows={3}
               placeholder={
-                isAiMode
+                isAiBooking
                   ? 'Mô tả ngắn triệu chứng hoặc lý do khám...'
                   : 'Vui lòng mô tả chi tiết triệu chứng, vị trí đau hoặc lý do bạn muốn đi khám để bác sĩ nắm sơ bộ...'
               }
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
-          </div>
-
-          {/* ── Progressive Disclosure: Ghi chú thêm ── */}
-          <div className="notes-disclosure">
-            <button
-              type="button"
-              className="notes-disclosure__trigger"
-              onClick={() => setShowNotes(!showNotes)}
-            >
-              {showNotes ? (
-                <>
-                  <Minus size={14} />
-                  Ẩn ghi chú
-                </>
-              ) : (
-                <>
-                  <PenLine size={14} />
-                  Thêm yêu cầu đặc biệt / Ghi chú cho lễ tân (Tùy chọn)
-                </>
-              )}
-            </button>
-            <div className={`notes-disclosure__content${showNotes ? ' notes-disclosure__content--open' : ''}`}>
-              <div style={{ paddingTop: 'var(--spacing-sm)' }}>
-                <textarea
-                  id="booking-notes"
-                  className="booking-textarea"
-                  rows={2}
-                  placeholder="Ví dụ: Cần hỗ trợ xe lăn, xuất hóa đơn đỏ..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-            </div>
           </div>
         </div>
       ) : null}

@@ -29,6 +29,10 @@ export type HealthArticle = {
   title: string;
   category: string;
   imageUrl: string;
+  content: string[];
+  author: string;
+  readTime: string;
+  publishedAt: string;
 };
 
 /* ── Appointment Module Types ── */
@@ -88,6 +92,7 @@ export type DoctorSchedule = {
 export type BookingContext = {
   isReschedule: boolean;
   fromAppointment: AppointmentData | null;
+  source?: 'ai-triage' | 'manual' | 'appointment-history';
   prefilledSpecialty?: string;
   prefilledDoctor?: string;
   prefilledReason?: string;

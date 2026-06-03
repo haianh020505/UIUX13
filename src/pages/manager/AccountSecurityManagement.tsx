@@ -158,7 +158,8 @@ export default function AccountSecurityManagement({ onNotify }: { onNotify?: (me
               </div>
             </div>
             <div className="flex justify-end border-t border-slate-100 px-4 py-3">
-              <button type="submit" className="secondary-action disabled:cursor-not-allowed disabled:opacity-50" disabled={!canSubmitPassword}>
+              <button type="submit" className="secondary-action disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2" disabled={!canSubmitPassword}>
+                <ShieldCheck size={16} />
                 Cập nhật mật khẩu
               </button>
             </div>

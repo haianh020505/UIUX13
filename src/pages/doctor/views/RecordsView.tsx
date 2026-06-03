@@ -318,7 +318,7 @@ export function RecordDetailView({
         </div>
       </section>
       <section className="grid gap-4 xl:grid-cols-[0.8fr_1.4fr]">
-        <article className="panel space-y-4"><h3 className="panel-title">Thông tin y tế cơ bản</h3><InfoBox title="Dị ứng & Chống chỉ định" danger text={patient.allergy} /><InfoBox title="Tiền sử bệnh lý" text={patient.history.join(' · ')} /><InfoBox title="Tiền sử gia đình" text={patient.family} /><InfoBox title="Thuốc đang dùng định kỳ" info text={patient.medication} /></article>
+        <article className="panel space-y-4"><h3 className="panel-title">Thông tin y tế cơ bản</h3><InfoBox title="Dị ứng (BN tự khai báo)" danger text={patient.allergy} /><InfoBox title="Tiền sử bệnh lý" text={patient.history.join(' · ')} /><InfoBox title="Tiền sử gia đình" text={patient.family} /><InfoBox title="Thuốc đang dùng định kỳ" info text={patient.medication} /></article>
         <article className="panel">
           <div className="flex gap-4 border-b border-slate-200">
             <button
