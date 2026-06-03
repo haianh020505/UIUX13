@@ -33,13 +33,20 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
     .sort((current, next) => shiftStatusPriority[current.status] - shiftStatusPriority[next.status]);
   const dashboardShiftRows = filteredShiftRows.slice(0, 6);
 
+  const hour = new Date().getHours();
+  let timeGreeting = 'Chào buổi sáng';
+  if (hour >= 12 && hour < 18) timeGreeting = 'Chào buổi chiều';
+  else if (hour >= 18) timeGreeting = 'Chào buổi tối';
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Tổng quan hoạt động phòng khám hôm nay</p>
-        </div>
+        <header className="saas-greeting">
+          <h1 className="saas-greeting-title">{timeGreeting}, Quản lý Admin!</h1>
+          <p className="saas-greeting-sub">
+            Hôm nay hệ thống ghi nhận <strong>142</strong> lượt khám bệnh và <strong>34</strong> bệnh nhân mới đăng ký.
+          </p>
+        </header>
         <button type="button" className="secondary-action">
           <Download size={16} />
           Tải Báo Cáo

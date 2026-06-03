@@ -95,7 +95,7 @@ export default function ManagerApp() {
     setMobileOpen(false);
   };
 
-  const activeLabel = managerMenu.find((item) => item.id === page)?.label ?? 'Dashboard';
+  const activeLabel = managerMenu.find((item) => item.id === page)?.label ?? 'Trang chủ';
 
   return (
     <main className="min-h-screen bg-[#f1f4f7] text-sm text-slate-700 lg:flex">
@@ -122,7 +122,7 @@ export default function ManagerApp() {
             setMobileOpen(false);
           }}
           className="flex h-14 w-full items-center gap-2.5 border-b border-slate-200 px-4 text-left transition hover:bg-slate-50"
-          aria-label="Về Dashboard"
+          aria-label="Về Trang chủ"
         >
           <LogoMark />
           <span className="text-sm font-semibold text-slate-500">Fakeeh Care Group</span>
@@ -180,7 +180,7 @@ export default function ManagerApp() {
               icon={<Clock size={22} />}
               title={managerMenu.find((item) => item.id === page)?.label ?? 'Chức năng'}
               subtitle="Mục này hiện chưa có màn chi tiết trong prototype."
-              actions={['Quay lại Dashboard', 'Mở Quản lý phòng khám']}
+              actions={['Quay lại Trang chủ', 'Mở Quản lý phòng khám']}
               onPrimary={() => setPage('dashboard')}
               onSecondary={() => setPage('clinic')}
             />

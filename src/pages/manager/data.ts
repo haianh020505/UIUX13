@@ -2,7 +2,7 @@ import { BarChart3, Bell, Building2, CalendarDays, FileUser, LayoutDashboard, Us
 import type { ClinicTab, ShiftRoleFilterId, ShiftRow } from './types';
 
 export const managerMenu = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Trang chủ', icon: LayoutDashboard },
   { id: 'clinic', label: 'Quản lý phòng khám', icon: Building2 },
   { id: 'schedule', label: 'Quản lý lịch khám', icon: CalendarDays },
   { id: 'records', label: 'Hồ sơ bệnh nhân', icon: FileUser },

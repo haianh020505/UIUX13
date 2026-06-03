@@ -74,7 +74,11 @@ export type NotificationTarget =
   | 'doctor-lab-new'
   | 'doctor-triage-risk'
   | 'doctor-consultation'
-  | 'doctor-record-updated';
+  | 'doctor-record-updated'
+  | 'patient-appointment-confirmed'
+  | 'patient-appointment-reminder'
+  | 'patient-lab-result'
+  | 'patient-medication-reminder';
 
 export default function NotificationBell({
   notifications = defaultNotifications,
