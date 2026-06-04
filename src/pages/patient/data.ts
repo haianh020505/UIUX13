@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   MessageCircle,
   CalendarDays,
-  FolderHeart,
+  FileUser,
   UserRound,
   Heart,
   Baby,
@@ -19,7 +19,7 @@ export const patientMenu: PatientMenuItem[] = [
   { id: 'dashboard', label: 'Trang chủ', icon: LayoutDashboard },
   { id: 'consultation', label: 'Tư vấn Y tế', icon: MessageCircle },
   { id: 'appointments', label: 'Lịch hẹn của tôi', icon: CalendarDays },
-  { id: 'health-records', label: 'Hồ sơ sức khỏe', icon: FolderHeart },
+  { id: 'health-records', label: 'Hồ sơ sức khỏe', icon: FileUser },
   { id: 'articles', label: 'Cẩm nang y tế', icon: BookOpen },
   { id: 'account', label: 'Tài khoản', icon: UserRound },
 ];

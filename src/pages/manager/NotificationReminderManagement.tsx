@@ -601,9 +601,26 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
             }}
           />
         </div>
+        {(query.trim() || statusFilter !== 'Tất cả trạng thái' || channelFilter !== 'Tất cả kênh') ? (
+          <button
+            type="button"
+            className="filter-clear-btn"
+            onClick={() => { setQuery(''); setStatusFilter('Tất cả trạng thái'); setChannelFilter('Tất cả kênh'); setPage(1); }}
+          >
+            <X size={14} /> Xóa bộ lọc
+          </button>
+        ) : null}
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+        <table className="min-w-full table-fixed text-left text-sm">
+          <colgroup>
+            <col style={{width:'140px'}} />
+            <col style={{width:'150px'}} />
+            <col />
+            <col style={{width:'100px'}} />
+            <col style={{width:'110px'}} />
+            <col style={{width:'80px'}} />
+          </colgroup>
           <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Thời gian</th>

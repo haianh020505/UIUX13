@@ -36,9 +36,13 @@ export default function ManagerApp() {
       return;
     }
 
-    const timer = window.setTimeout(() => setToast(null), 2600);
+    const timer = window.setTimeout(() => setToast(null), 3000);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const openClinicTab = (tab: ClinicTab) => {
     setPage('clinic');
@@ -111,7 +115,7 @@ export default function ManagerApp() {
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:fixed lg:top-0 lg:h-screen lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -157,7 +161,7 @@ export default function ManagerApp() {
         <button type="button" className="fixed inset-0 z-30 bg-slate-900/30 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Đóng menu" />
       ) : null}
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 lg:ml-60">
         <ManagerHeader
           activeLabel={activeLabel}
           onOpenMenu={() => setMobileOpen(true)}
@@ -194,8 +198,8 @@ export default function ManagerApp() {
 function Toast({ message }: { message: string }) {
   return (
     <div
-      className="fixed right-4 top-4 z-[60] flex min-w-64 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold shadow-xl"
-      style={{ background: 'var(--color-success)', color: 'var(--color-on-success)' }}
+      className="fixed right-4 top-4 z-[9999] flex min-w-64 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold shadow-xl"
+      style={{ background: 'var(--color-success)', color: 'var(--color-on-success)', animation: 'toastSlideIn 0.35s ease-out' }}
       role="status"
       aria-live="polite"
     >

@@ -649,9 +649,9 @@ function PrintPreviewModal({
   onPrint: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 px-4 backdrop-blur-sm">
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 px-4 backdrop-blur-sm print-modal-overlay">
+      <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-2xl print-modal-content">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 print:hidden">
           <div>
             <h3 className="text-base font-extrabold text-slate-900">Xem & In phiếu</h3>
             <p className="text-xs font-semibold text-slate-500">Bản xem trước phiếu chỉ định và đơn thuốc</p>
@@ -661,8 +661,8 @@ function PrintPreviewModal({
           </button>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto bg-slate-100 p-5">
-          <article className="mx-auto min-h-[720px] max-w-[620px] bg-white p-8 text-slate-800 shadow-lg">
+        <div className="max-h-[70vh] overflow-y-auto bg-slate-100 p-5 print-modal-body">
+          <article className="mx-auto min-h-[720px] max-w-[620px] bg-white p-8 text-slate-800 shadow-lg printable-sheet">
             <div className="border-b border-slate-300 pb-4 text-center">
               <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Fakeeh Care Group</p>
               <h2 className="mt-2 text-xl font-extrabold uppercase text-slate-900">Phiếu Chỉ định & Đơn thuốc</h2>
@@ -689,8 +689,8 @@ function PrintPreviewModal({
               <div className="mt-3 space-y-3 text-sm">
                 {prescribedDrugs.length ? prescribedDrugs.map((drug, index) => (
                   <div key={`${drug.name}-${index}`}>
-                    <p><strong>{index + 1}. {drug.name}</strong> <span className="text-blue-600">({drug.quantity})</span></p>
-                    <p className="text-slate-500">Cách dùng: {drug.usage}</p>
+                     <p><strong>{index + 1}. {drug.name}</strong> <span className="text-blue-600">({drug.quantity})</span></p>
+                     <p className="text-slate-500">Cách dùng: {drug.usage}</p>
                   </div>
                 )) : <p className="italic text-slate-400">Chưa có thuốc trong đơn.</p>}
               </div>
@@ -711,7 +711,7 @@ function PrintPreviewModal({
           </article>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4 print:hidden">
           <button type="button" onClick={onClose} className="ghost-action cursor-pointer">Đóng</button>
           <button type="button" onClick={onPrint} className="secondary-action cursor-pointer">In phiếu</button>
         </div>

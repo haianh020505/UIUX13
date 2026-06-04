@@ -120,6 +120,7 @@ export default function PatientBooking({
     setSelectedDoctorId(doctorId);
     setSelectedSlot(slot);
     setSelectedDate(dateValue);
+    setStep(3); // Auto advance to step 3
   };
 
   /* ── Card date change handler (horizontal scroller) ── */
@@ -139,6 +140,7 @@ export default function PatientBooking({
     setSelectedSlot(null);
     setSelectedDate('');
     setCardDates(getInitialCardDates());
+    setStep(2); // Auto advance to step 2
   };
 
   return (

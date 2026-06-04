@@ -46,9 +46,13 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 2200);
+    const timer = window.setTimeout(() => setToast(null), 3000);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [view]);
 
   useEffect(() => {
     const patientId = searchParams.get('patientId');
@@ -240,7 +244,7 @@ export default function DoctorDashboard() {
       />
       {mobileOpen ? <button type="button" className="fixed inset-0 z-30 cursor-pointer bg-slate-900/30 lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Đóng menu" /> : null}
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 lg:ml-60">
         <DoctorHeader
           title={activeLabel}
           onOpenMenu={() => setMobileOpen(true)}

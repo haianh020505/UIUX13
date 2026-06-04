@@ -45,9 +45,13 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 2600);
+    const timer = window.setTimeout(() => setToast(null), 3000);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const openPage = (nextPage: PatientPage) => {
     setPage(nextPage);
@@ -140,7 +144,7 @@ export default function PatientDashboard() {
 
       {/* ── SIDEBAR ── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 flex flex-col ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:fixed lg:top-0 lg:h-screen lg:translate-x-0 flex flex-col ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -190,7 +194,7 @@ export default function PatientDashboard() {
       ) : null}
 
       {/* ── MAIN CONTENT ── */}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 lg:ml-60">
         {/* ── TOP NAVBAR ── */}
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
           <button
@@ -306,8 +310,8 @@ export default function PatientDashboard() {
 function Toast({ message }: { message: string }) {
   return (
     <div
-      className="fixed right-4 top-4 z-[60] flex min-w-64 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold shadow-xl"
-      style={{ background: 'var(--color-success)', color: 'var(--color-on-success)' }}
+      className="fixed right-4 top-4 z-[9999] flex min-w-64 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold shadow-xl"
+      style={{ background: 'var(--color-success)', color: 'var(--color-on-success)', animation: 'toastSlideIn 0.35s ease-out' }}
       role="status"
       aria-live="polite"
     >

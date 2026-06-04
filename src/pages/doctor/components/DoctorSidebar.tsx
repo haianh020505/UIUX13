@@ -17,7 +17,7 @@ export default function DoctorSidebar({
 }) {
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-slate-200 bg-white transition-transform lg:fixed lg:top-0 lg:h-screen lg:translate-x-0 ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >

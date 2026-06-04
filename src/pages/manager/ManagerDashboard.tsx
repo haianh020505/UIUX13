@@ -64,7 +64,7 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
         <section className="panel">
           <h2 className="panel-title">Lưu lượng bệnh nhân theo khung giờ</h2>
           <p className="panel-subtitle">Giúp phân bổ nhân sự y tá, lễ tân hợp lý</p>
-          <div className="mt-3 h-32">
+          <div className="mt-3 h-56">
             <PatientFlowChart />
           </div>
         </section>

@@ -489,15 +489,30 @@ function AddServiceForm({
   const [price, setPrice] = useState(service?.price ?? '');
   const [description, setDescription] = useState(service?.description ?? '');
   const [pendingPayload, setPendingPayload] = useState<Omit<Service, 'id'> | null>(null);
+  const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
   const specialtyNames = specialties.map((item) => item.name);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    const newErrors: { name?: string; price?: string } = {};
+    if (!name.trim()) newErrors.name = 'Tên dịch vụ không được để trống';
+    const priceClean = price.replace(/\./g, '').replace(/,/g, '');
+    const priceNum = Number(priceClean);
+    if (!price.trim()) {
+      newErrors.price = 'Giá dịch vụ không được để trống';
+    } else if (isNaN(priceNum) || priceNum <= 0) {
+      newErrors.price = 'Giá dịch vụ phải là số và lớn hơn 0';
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
     setPendingPayload({
-      name: name.trim() || 'Dịch vụ mới',
+      name: name.trim(),
       specialty: specialty || specialtyNames[0] || 'Chưa phân khoa',
       duration,
-      price: price.trim() || '0',
+      price: price.trim(),
       description: description.trim() || 'Chưa có mô tả',
     });
   };
@@ -518,7 +533,8 @@ function AddServiceForm({
             <p className="mt-2 text-xs font-medium text-slate-400">Mã dịch vụ được tạo tự động bởi hệ thống.</p>
           </Field>
           <Field label="Tên dịch vụ *">
-            <input className="form-input" value={name} onChange={(event) => setName(event.target.value)} placeholder="Nhập tên dịch vụ" />
+            <input className={`form-input ${errors.name ? 'border-red-400' : ''}`} value={name} onChange={(event) => { setName(event.target.value); if (errors.name) setErrors(e => ({ ...e, name: undefined })); }} placeholder="Nhập tên dịch vụ" />
+            {errors.name ? <p className="mt-1 text-xs font-semibold text-red-500">{errors.name}</p> : null}
           </Field>
           <Field label="Thuộc chuyên khoa">
             <SelectMenu value={specialty} options={specialtyNames} onChange={setSpecialty} />
@@ -526,8 +542,9 @@ function AddServiceForm({
           <Field label="Thời gian thực hiện">
             <SelectMenu value={duration} options={serviceDurations} onChange={setDuration} />
           </Field>
-          <Field label="Giá niêm yết">
-            <input className="form-input" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="VD: 200.000" />
+          <Field label="Giá niêm yết *">
+            <input className={`form-input ${errors.price ? 'border-red-400' : ''}`} value={price} onChange={(event) => { setPrice(event.target.value); if (errors.price) setErrors(e => ({ ...e, price: undefined })); }} placeholder="VD: 200.000" />
+            {errors.price ? <p className="mt-1 text-xs font-semibold text-red-500">{errors.price}</p> : null}
           </Field>
           <Field label="Mô tả ngắn">
             <input className="form-input" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Nhập mô tả hiển thị dưới tên dịch vụ" />

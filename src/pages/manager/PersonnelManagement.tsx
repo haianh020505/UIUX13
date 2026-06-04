@@ -56,14 +56,18 @@ function nextStaffCode(staffList: Staff[]) {
 export default function PersonnelManagement({ onNotify }: { onNotify?: (message: string) => void }) {
   const [staff, setStaff] = useState<Staff[]>(standardizedStaff);
   const [query, setQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [editingStaff, setEditingStaff] = useState<Staff | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Staff | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  // Search filter
+  const hasActiveFilters = !!(query.trim() || roleFilter);
+  // Search + role filter
   const filteredStaff = staff.filter((item) => {
     const keyword = query.trim().toLowerCase();
-    return !keyword || [item.id, item.name, item.phone, item.specialty, item.role].some((val) => val.toLowerCase().includes(keyword));
+    const matchesSearch = !keyword || [item.id, item.name, item.phone, item.specialty, item.role].some((val) => val.toLowerCase().includes(keyword));
+    const matchesRole = !roleFilter || item.role === roleFilter;
+    return matchesSearch && matchesRole;
   });
 
   const totalStaffCount = filteredStaff.length;
@@ -105,8 +109,8 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
       {/* Main Container */}
       <section className="rounded-xl border border-gray-100 bg-white shadow-sm">
         {/* Search Toolbar */}
-        <div className="border-b border-slate-100 p-5">
-          <label className="relative block max-w-md">
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-5">
+          <label className="relative block min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               className="form-input pl-10"
@@ -118,11 +122,39 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
               placeholder="Tìm kiếm nhân sự theo tên, mã hoặc số điện thoại..."
             />
           </label>
+          <select
+            value={roleFilter}
+            onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+            className="form-input w-auto min-w-[160px]"
+          >
+            <option value="">Tất cả vai trò</option>
+            <option value="Bác sĩ">Bác sĩ</option>
+            <option value="Điều dưỡng">Điều dưỡng</option>
+            <option value="Kỹ thuật viên">Kỹ thuật viên</option>
+            <option value="Lễ tân">Lễ tân</option>
+          </select>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              className="filter-clear-btn"
+              onClick={() => { setQuery(''); setRoleFilter(''); setPage(1); }}
+            >
+              <X size={14} /> Xóa bộ lọc
+            </button>
+          ) : null}
         </div>
 
         {/* Data Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-full table-fixed text-left text-sm">
+            <colgroup>
+              <col style={{width:'100px'}} />
+              <col style={{width:'180px'}} />
+              <col style={{width:'120px'}} />
+              <col />
+              <col style={{width:'140px'}} />
+              <col style={{width:'120px'}} />
+            </colgroup>
             <thead className="border-b border-slate-200 bg-slate-50/50 text-xs font-extrabold uppercase text-slate-500">
               <tr>
                 <th className="px-4 py-3">Mã NS</th>
@@ -185,6 +217,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
         </div>
 
         {/* Pagination Component */}
+        {totalPages > 1 ? (
         <div className="flex items-center justify-between border-t border-slate-100 p-4">
           <p className="text-sm font-semibold text-slate-500">
             Hiển thị {pageStart}-{pageEnd} trên tổng số {totalStaffCount}
@@ -194,7 +227,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
               type="button"
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Trang trước"
             >
               <ChevronLeft size={18} />
@@ -215,13 +248,14 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
               type="button"
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Trang sau"
             >
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
+        ) : null}
       </section>
 
       {/* CRUD Form Modal */}

@@ -74,7 +74,14 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
           </select>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-full table-fixed text-left text-sm">
+            <colgroup>
+              <col style={{width:'100px'}} />
+              <col style={{width:'180px'}} />
+              <col style={{width:'130px'}} />
+              <col />
+              <col style={{width:'100px'}} />
+            </colgroup>
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase text-slate-500"><tr><th className="px-4 py-3">Mã BN</th><th className="px-4 py-3">Bệnh nhân</th><th className="px-4 py-3">Ngày khám cuối</th><th className="px-4 py-3">Chẩn đoán gần nhất</th><th className="px-4 py-3 text-right">Hành động</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {pagedPatients.map((patient) => (
@@ -117,7 +124,7 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
             </div>
           ) : null}
         </div>
-        <Pagination currentPage={page} totalPages={totalPages} totalItems={visiblePatients.length} pageSize={pageSize} onChange={setPage} />
+        {totalPages > 1 ? <Pagination currentPage={page} totalPages={totalPages} totalItems={visiblePatients.length} pageSize={pageSize} onChange={setPage} /> : null}
       </section>
     </div>
   );

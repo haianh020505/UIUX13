@@ -25,6 +25,7 @@ export default function ConfirmDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const toneStyles = {
     primary: {
@@ -50,14 +51,45 @@ export default function ConfirmDialog({
   useEffect(() => {
     cancelButtonRef.current?.focus();
 
+    // Body scroll lock
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onCancel();
+        return;
+      }
+
+      // Focus trap: cycle Tab within dialog
+      if (event.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
   }, [onCancel]);
 
   return (
@@ -65,15 +97,22 @@ export default function ConfirmDialog({
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
       role="presentation"
-      style={{ background: 'color-mix(in srgb, var(--color-text-primary) 40%, transparent)' }}
+      style={{
+        background: 'color-mix(in srgb, var(--color-text-primary) 40%, transparent)',
+        animation: 'modalOverlayIn 0.2s ease-out',
+      }}
     >
       <div
+        ref={dialogRef}
         className="w-full max-w-md overflow-hidden rounded-xl shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-desc"
-        style={{ background: 'var(--color-bg-surface)' }}
+        style={{
+          background: 'var(--color-bg-surface)',
+          animation: 'modalPanelIn 0.25s ease-out',
+        }}
       >
         <div className="flex items-start justify-between gap-4 border-b px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex gap-3">

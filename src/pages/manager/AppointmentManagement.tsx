@@ -417,10 +417,15 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
           anchorDate={anchorDate}
           onDateSelect={setAnchorDate}
           onMoveDate={(direction) => setAnchorDate((current) => moveDate(current, viewMode, direction))}
+          hasActiveFilters={specialtyFilter !== specialties[0] || statusFilter !== 'all'}
+          onClearFilters={() => {
+            setSpecialtyFilter(specialties[0]);
+            setStatusFilter('all');
+          }}
         />
         <StatusFilterTabs active={statusFilter} counts={statusCounts} onChange={setStatusFilter} />
         <AppointmentTable groups={groupedAppointments} onView={setDetailModalId} onConfirm={(id) => setPendingAction({ id, action: 'confirm' })} onReject={(id) => setPendingAction({ id, action: 'reject' })} />
-        <Pagination currentPage={page} totalPages={totalPages} totalItems={filteredAppointments.length} pageSize={pageSize} onChange={setPage} />
+        {totalPages > 1 ? <Pagination currentPage={page} totalPages={totalPages} totalItems={filteredAppointments.length} pageSize={pageSize} onChange={setPage} /> : null}
       </section>
       {detailAppointment ? (
         <AppointmentDetailsModal
@@ -459,6 +464,8 @@ function AppointmentToolbar({
   anchorDate,
   onDateSelect,
   onMoveDate,
+  hasActiveFilters,
+  onClearFilters,
 }: {
   specialtyFilter: string;
   onSpecialtyChange: (value: string) => void;
@@ -467,11 +474,25 @@ function AppointmentToolbar({
   anchorDate: Date;
   onDateSelect: (value: Date) => void;
   onMoveDate: (direction: -1 | 1) => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
 }) {
   return (
     <div className="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-center xl:justify-between">
-      <div className="w-full max-w-sm">
-        <SelectMenu value={specialtyFilter} options={[...specialties, ...Object.values(doctorsBySpecialty).flat()]} onChange={onSpecialtyChange} />
+      <div className="flex w-full max-w-lg items-center gap-3">
+        <div className="w-full max-w-sm">
+          <SelectMenu value={specialtyFilter} options={[...specialties, ...Object.values(doctorsBySpecialty).flat()]} onChange={onSpecialtyChange} />
+        </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 active:scale-[0.98] cursor-pointer"
+          >
+            <X size={14} />
+            Xóa bộ lọc
+          </button>
+        )}
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <DateNavigator anchorDate={anchorDate} viewMode={viewMode} onDateSelect={onDateSelect} onMoveDate={onMoveDate} />
@@ -603,6 +624,13 @@ function AppointmentTable({
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full table-fixed text-left text-sm">
+        <colgroup>
+          <col style={{ width: '120px' }} />
+          <col style={{ width: '220px' }} />
+          <col />
+          <col style={{ width: '160px' }} />
+          <col style={{ width: '140px' }} />
+        </colgroup>
         <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
           <tr>
             <th className="px-4 py-3">Khung giờ</th>
