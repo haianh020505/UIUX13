@@ -45,7 +45,7 @@ const slots = ['08:00 - 08:30', '08:30 - 09:00', '09:00 - 09:30', '10:30 - 11:00
 const initialAppointments: Appointment[] = [
   {
     id: 'LH-001',
-    date: '10/05/2026',
+    date: '04/06/2026',
     time: '08:00 - 08:30',
     patient: 'Nhật Linh',
     specialty: 'Nội Tổng Hợp',
@@ -57,7 +57,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-002',
-    date: '10/05/2026',
+    date: '04/06/2026',
     time: '09:00 - 09:30',
     patient: 'Nguyễn Duy Cương',
     specialty: 'Tai Mũi Họng',
@@ -69,7 +69,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-003',
-    date: '11/05/2026',
+    date: '04/06/2026',
     time: '08:30 - 09:00',
     patient: 'Đỗ Minh Khôi',
     specialty: 'Nhi Khoa',
@@ -81,7 +81,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-004',
-    date: '11/05/2026',
+    date: '04/06/2026',
     time: '09:00 - 09:30',
     patient: 'Mai Anh Thư',
     specialty: 'Nội Tổng Hợp',
@@ -93,7 +93,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-005',
-    date: '11/05/2026',
+    date: '04/06/2026',
     time: '10:30 - 11:00',
     patient: 'Vũ Thu Trang',
     specialty: 'Tai Mũi Họng',
@@ -105,7 +105,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-006',
-    date: '12/05/2026',
+    date: '04/06/2026',
     time: '08:00 - 08:30',
     patient: 'Hoàng Gia Bảo',
     specialty: 'Nhi Khoa',
@@ -117,7 +117,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-007',
-    date: '12/05/2026',
+    date: '04/06/2026',
     time: '13:30 - 14:00',
     patient: 'Trần Khánh Vy',
     specialty: 'Nội Tổng Hợp',
@@ -129,7 +129,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-008',
-    date: '13/05/2026',
+    date: '04/06/2026',
     time: '08:30 - 09:00',
     patient: 'Phạm Quốc Huy',
     specialty: 'Tai Mũi Họng',
@@ -141,7 +141,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-009',
-    date: '13/05/2026',
+    date: '04/06/2026',
     time: '15:00 - 15:30',
     patient: 'Lâm Minh Châu',
     specialty: 'Nhi Khoa',
@@ -153,7 +153,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-010',
-    date: '14/05/2026',
+    date: '04/06/2026',
     time: '09:00 - 09:30',
     patient: 'Ngô Thanh Tùng',
     specialty: 'Nội Tổng Hợp',
@@ -165,7 +165,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-011',
-    date: '15/05/2026',
+    date: '04/06/2026',
     time: '10:30 - 11:00',
     patient: 'Bùi Hải Nam',
     specialty: 'Tai Mũi Họng',
@@ -177,7 +177,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-012',
-    date: '20/05/2026',
+    date: '04/06/2026',
     time: '08:00 - 08:30',
     patient: 'Nguyễn Minh Khang',
     specialty: 'Nhi Khoa',
@@ -189,7 +189,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-013',
-    date: '22/05/2026',
+    date: '05/06/2026',
     time: '13:30 - 14:00',
     patient: 'Đặng Mỹ Linh',
     specialty: 'Nội Tổng Hợp',
@@ -201,7 +201,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-014',
-    date: '27/05/2026',
+    date: '06/06/2026',
     time: '09:00 - 09:30',
     patient: 'Tạ Hoàng Long',
     specialty: 'Tai Mũi Họng',
@@ -213,7 +213,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-015',
-    date: '10/05/2026',
+    date: '05/06/2026',
     time: '10:30 - 11:00',
     patient: 'Phan Minh Đức',
     specialty: 'Nội Tổng Hợp',
@@ -225,7 +225,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-016',
-    date: '10/05/2026',
+    date: '06/06/2026',
     time: '13:30 - 14:00',
     patient: 'Nguyễn Thảo My',
     specialty: 'Nhi Khoa',
@@ -237,7 +237,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-017',
-    date: '12/05/2026',
+    date: '07/06/2026',
     time: '09:00 - 09:30',
     patient: 'Trịnh Bảo An',
     specialty: 'Tai Mũi Họng',
@@ -249,7 +249,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-018',
-    date: '14/05/2026',
+    date: '08/06/2026',
     time: '08:30 - 09:00',
     patient: 'Lê Hoài Nam',
     specialty: 'Nội Tổng Hợp',
@@ -261,7 +261,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-019',
-    date: '15/05/2026',
+    date: '12/06/2026',
     time: '13:30 - 14:00',
     patient: 'Đinh Khánh Ngọc',
     specialty: 'Nhi Khoa',
@@ -273,7 +273,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-020',
-    date: '16/05/2026',
+    date: '16/06/2026',
     time: '08:00 - 08:30',
     patient: 'Võ Thành Đạt',
     specialty: 'Tai Mũi Họng',
@@ -285,7 +285,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-021',
-    date: '18/05/2026',
+    date: '18/06/2026',
     time: '10:30 - 11:00',
     patient: 'Hoàng Lan Chi',
     specialty: 'Nội Tổng Hợp',
@@ -297,7 +297,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-022',
-    date: '19/05/2026',
+    date: '19/06/2026',
     time: '09:00 - 09:30',
     patient: 'Bùi Nhật Minh',
     specialty: 'Nhi Khoa',
@@ -309,7 +309,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-023',
-    date: '21/05/2026',
+    date: '23/06/2026',
     time: '08:30 - 09:00',
     patient: 'Đặng Hà My',
     specialty: 'Tai Mũi Họng',
@@ -321,7 +321,7 @@ const initialAppointments: Appointment[] = [
   },
   {
     id: 'LH-024',
-    date: '24/05/2026',
+    date: '24/06/2026',
     time: '13:30 - 14:00',
     patient: 'Phạm Minh Quang',
     specialty: 'Nội Tổng Hợp',
@@ -355,8 +355,8 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
   const [pendingAction, setPendingAction] = useState<{ id: string; action: 'confirm' | 'reject' } | null>(null);
   const [specialtyFilter, setSpecialtyFilter] = useState(specialties[0]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const [anchorDate, setAnchorDate] = useState(() => parseDisplayDate('10/05/2026'));
+  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [anchorDate, setAnchorDate] = useState(() => parseDisplayDate('04/06/2026'));
   const [page, setPage] = useState(1);
   const pageSize = 8;
 

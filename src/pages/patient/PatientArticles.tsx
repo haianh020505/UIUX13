@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Search, 
   X, 
@@ -135,6 +136,24 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
 
   const currentArticle = healthArticles.find(a => a.id === (activeArticleId || selectedArticleId));
 
+  useEffect(() => {
+    if (!currentArticle) {
+      return;
+    }
+
+    const { overflow, paddingRight } = document.body.style;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
+    };
+  }, [currentArticle]);
+
   const hasArticles = filteredArticles.length > 0;
   const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
   
@@ -143,6 +162,106 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const closeArticle = () => {
+    setActiveArticleId(null);
+    onCloseArticle();
+  };
+
+  const readerOverlay = currentArticle ? createPortal(
+    <>
+      <div
+        onClick={closeArticle}
+        className="articles-overlay"
+        aria-hidden="true"
+      />
+
+      <div className="articles-drawer">
+        <div className="articles-drawer-header">
+          <button
+            type="button"
+            onClick={closeArticle}
+            className="articles-drawer-back"
+          >
+            <ArrowLeft size={16} />
+            Quay lại
+          </button>
+
+          <div className="articles-drawer-actions">
+            <button
+              type="button"
+              onClick={() => toggleBookmark(currentArticle.id)}
+              className={`articles-bookmark ${
+                savedArticleIds.includes(currentArticle.id) ? 'articles-bookmark--saved' : ''
+              }`}
+              title={savedArticleIds.includes(currentArticle.id) ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+            >
+              <Heart size={18} fill={savedArticleIds.includes(currentArticle.id) ? "currentColor" : "none"} />
+            </button>
+            <button
+              type="button"
+              onClick={closeArticle}
+              className="articles-drawer-close"
+              aria-label="Đóng bảng đọc"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="articles-drawer-scroll">
+          <div className="articles-reader-cover">
+            <img
+              src={currentArticle.imageUrl}
+              alt={currentArticle.title}
+            />
+            <div className="articles-reader-cover-overlay" />
+            <span className="articles-reader-cover-tag">
+              {currentArticle.category}
+            </span>
+          </div>
+
+          <article className="articles-reader-body">
+            <h1 className="articles-reader-title">
+              {currentArticle.title}
+            </h1>
+
+            <div className="articles-reader-meta">
+              <span className="articles-reader-meta-item">
+                <User size={14} className="articles-meta-icon" />
+                <span>Tác giả: <strong>{currentArticle.author}</strong></span>
+              </span>
+              <span className="articles-reader-meta-dot">•</span>
+              <span className="articles-reader-meta-item">
+                <Calendar size={14} className="articles-meta-icon" />
+                <span>Đăng ngày: <strong>{currentArticle.publishedAt}</strong></span>
+              </span>
+              <span className="articles-reader-meta-dot">•</span>
+              <span className="articles-reader-meta-item">
+                <Clock size={14} className="articles-meta-icon" />
+                <span>Thời gian đọc: <strong>{currentArticle.readTime}</strong></span>
+              </span>
+            </div>
+
+            <div className="articles-reader-content">
+              {currentArticle.content.map((paragraph, index) => (
+                <p key={index}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
+            <div className="articles-reader-disclaimer">
+              <p>
+                Lưu ý: Nội dung bài viết chỉ mang tính chất tham khảo kiến thức y khoa, không thay thế cho chẩn đoán hay điều trị thực tế. Khi phát hiện các triệu chứng bất thường, người bệnh cần tới trực tiếp bệnh viện hoặc cơ sở y tế gần nhất để được khám chữa trị chính xác.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </>,
+    document.body,
+  ) : null;
 
   return (
     <div className="space-y-6">
@@ -336,123 +455,7 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
         </div>
       )}
 
-      {/* ========================================================
-          READER MODE (SLIDE-OVER PANEL)
-          ======================================================== */}
-      {currentArticle && (
-        <>
-          {/* Backdrop Overlay */}
-          <div 
-            onClick={() => {
-              setActiveArticleId(null);
-              onCloseArticle();
-            }}
-            className="articles-overlay"
-            aria-hidden="true"
-          />
-
-          {/* Slide-over Panel */}
-          <div className="articles-drawer">
-            
-            {/* Header controls (Sticks to top) */}
-            <div className="articles-drawer-header">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveArticleId(null);
-                  onCloseArticle();
-                }}
-                className="articles-drawer-back"
-              >
-                <ArrowLeft size={16} />
-                Quay lại
-              </button>
-              
-              <div className="articles-drawer-actions">
-                <button
-                  type="button"
-                  onClick={() => toggleBookmark(currentArticle.id)}
-                  className={`articles-bookmark ${
-                    savedArticleIds.includes(currentArticle.id) ? 'articles-bookmark--saved' : ''
-                  }`}
-                  title={savedArticleIds.includes(currentArticle.id) ? "Bỏ lưu bài viết" : "Lưu bài viết"}
-                >
-                  <Heart size={18} fill={savedArticleIds.includes(currentArticle.id) ? "currentColor" : "none"} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveArticleId(null);
-                    onCloseArticle();
-                  }}
-                  className="articles-drawer-close"
-                  aria-label="Đóng bảng đọc"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable Article Area */}
-            <div className="articles-drawer-scroll">
-              {/* Cover Image */}
-              <div className="articles-reader-cover">
-                <img
-                  src={currentArticle.imageUrl}
-                  alt={currentArticle.title}
-                />
-                <div className="articles-reader-cover-overlay" />
-                <span className="articles-reader-cover-tag">
-                  {currentArticle.category}
-                </span>
-              </div>
-
-              {/* Main Content Article Body */}
-              <article className="articles-reader-body">
-                
-                {/* Title */}
-                <h1 className="articles-reader-title">
-                  {currentArticle.title}
-                </h1>
-
-                {/* Metadata details */}
-                <div className="articles-reader-meta">
-                  <span className="articles-reader-meta-item">
-                    <User size={14} className="articles-meta-icon" />
-                    <span>Tác giả: <strong>{currentArticle.author}</strong></span>
-                  </span>
-                  <span className="articles-reader-meta-dot">•</span>
-                  <span className="articles-reader-meta-item">
-                    <Calendar size={14} className="articles-meta-icon" />
-                    <span>Đăng ngày: <strong>{currentArticle.publishedAt}</strong></span>
-                  </span>
-                  <span className="articles-reader-meta-dot">•</span>
-                  <span className="articles-reader-meta-item">
-                    <Clock size={14} className="articles-meta-icon" />
-                    <span>Thời gian đọc: <strong>{currentArticle.readTime}</strong></span>
-                  </span>
-                </div>
-
-                {/* Body paragraphs with premium typography */}
-                <div className="articles-reader-content">
-                  {currentArticle.content.map((paragraph, index) => (
-                    <p key={index}>
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-
-                {/* Medical Disclaimer */}
-                <div className="articles-reader-disclaimer">
-                  <p>
-                    Lưu ý: Nội dung bài viết chỉ mang tính chất tham khảo kiến thức y khoa, không thay thế cho chẩn đoán hay điều trị thực tế. Khi phát hiện các triệu chứng bất thường, người bệnh cần tới trực tiếp bệnh viện hoặc cơ sở y tế gần nhất để được khám chữa trị chính xác.
-                  </p>
-                </div>
-              </article>
-            </div>
-          </div>
-        </>
-      )}
+      {readerOverlay}
     </div>
   );
 }

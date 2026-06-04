@@ -39,14 +39,21 @@ const initialStaff: Staff[] = [
   { id: 'ST-218', name: 'ĐD. Hồ Minh Tâm', role: 'Điều dưỡng', specialty: 'Lễ tân & Điều phối', phone: '0906.888.111', email: 'tamhm@fakeeh.care' },
 ];
 
-const standardizedStaff: Staff[] = mockStaff.map((item) => ({
-  id: item.id,
-  name: item.name,
-  role: item.role,
-  specialty: item.specialty,
-  phone: item.phone,
-  email: item.email,
-}));
+const standardizedStaff: Staff[] = Array.from(
+  new Map(
+    [...mockStaff, ...initialStaff].map((item) => [
+      item.id,
+      {
+        id: item.id,
+        name: item.name,
+        role: item.role,
+        specialty: item.specialty,
+        phone: item.phone,
+        email: item.email,
+      },
+    ]),
+  ).values(),
+);
 
 function nextStaffCode(staffList: Staff[]) {
   const max = staffList.reduce((value, item) => Math.max(value, Number(item.id.replace('ST-', '')) || 0), 0);
