@@ -158,7 +158,7 @@ export default function PatientDashboard() {
           aria-label="Về Trang chủ"
         >
           <LogoMark />
-          <span className="text-sm font-semibold text-slate-500">Fakeeh Care Group</span>
+          <span className="text-sm font-semibold text-slate-500">NovaCare Clinic</span>
         </button>
         <nav className="flex-1 flex flex-col space-y-1 overflow-y-auto px-3 py-4" style={{ maxHeight: 'calc(100vh - 3.5rem)' }}>
           {patientMenu.map((item) => {

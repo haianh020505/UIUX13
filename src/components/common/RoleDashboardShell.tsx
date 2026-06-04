@@ -21,7 +21,7 @@ export default function RoleDashboardShell({ title }: { title: string }) {
         <div className="flex items-center gap-3">
           <LogoMark />
           <div>
-            <p className="text-xs font-semibold text-brand">Fakeeh Care Group</p>
+            <p className="text-xs font-semibold text-brand">NovaCare Clinic</p>
             <h1 className="text-base font-bold text-slate-800">Dashboard {title}</h1>
           </div>
         </div>

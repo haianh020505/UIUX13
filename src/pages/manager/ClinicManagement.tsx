@@ -252,7 +252,7 @@ function ClinicInfo({ onNotify }: { onNotify?: (message: string) => void }) {
     <section className="panel">
       <div className="grid gap-5 lg:grid-cols-2">
         <Field label="Tên phòng khám / Cơ sở y tế">
-          <input className="form-input" defaultValue="Phòng khám Đa khoa Fakeeh Care" />
+          <input className="form-input" defaultValue="NovaCare Clinic" />
         </Field>
         <Field label="Số điện thoại liên hệ">
           <input className="form-input" defaultValue="1900 1234 - 0988.123.456" />

@@ -198,7 +198,7 @@ function now() {
 let msgCounter = 0;
 function uid() { return `m-${Date.now()}-${++msgCounter}`; }
 
-const INITIAL_BOT_MSG = 'Xin chào! Tôi là trợ lý y tế AI của Fakeeh Care Group. 🏥\nHôm nay bạn đang gặp vấn đề gì? Hãy chọn triệu chứng chính:';
+const INITIAL_BOT_MSG = 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. 🏥\nHôm nay bạn đang gặp vấn đề gì? Hãy chọn triệu chứng chính:';
 
 const INITIAL_CHIPS: string[] = [
   '🤒 Sốt',
@@ -235,7 +235,7 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
-      { id: 'h1-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của Fakeeh Care Group. Hôm nay bạn đang gặp vấn đề gì?', time: '14:00',
+      { id: 'h1-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '14:00',
         chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['🤧 Ho / Đau họng'] } },
       { id: 'h1-2', sender: 'patient', text: 'Ho / Đau họng', time: '14:01' },
       { id: 'h1-3', sender: 'ai', text: 'Bạn bị ho và đau họng từ khi nào?', time: '14:01',
@@ -275,7 +275,7 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
-      { id: 'h2-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của Fakeeh Care Group. Hôm nay bạn đang gặp vấn đề gì?', time: '08:50',
+      { id: 'h2-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '08:50',
         chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['🤒 Sốt'] } },
       { id: 'h2-2', sender: 'patient', text: 'Sốt', time: '08:51' },
       { id: 'h2-3', sender: 'ai', text: 'Bạn đang bị sốt. Nhiệt độ cơ thể hiện tại của bạn là bao nhiêu?', time: '08:52',
@@ -315,7 +315,7 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
-      { id: 'h3-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của Fakeeh Care Group. Hôm nay bạn đang gặp vấn đề gì?', time: '22:30',
+      { id: 'h3-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '22:30',
         chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['😮\u200d💨 Khó thở'] } },
       { id: 'h3-2', sender: 'patient', text: 'Khó thở', time: '22:30' },
       { id: 'h3-3', sender: 'ai', text: '⚠️ Khó thở là triệu chứng cần được đánh giá ngay.\nMức độ khó thở của bạn như thế nào?', time: '22:31',

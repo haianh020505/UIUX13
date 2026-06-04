@@ -30,7 +30,7 @@ export const upcomingAppointment: UpcomingAppointment = {
   time: '09:00 – 09:30',
   doctor: 'BS. Nguyễn Văn A',
   specialty: 'Tai Mũi Họng',
-  location: 'Fakeeh Care Group — Phòng 203, Tầng 2',
+  location: 'NovaCare Clinic — Phòng 203, Tầng 2',
 };
 
 /* ── Popular Specialties ── */
@@ -148,7 +148,7 @@ export const patientNotifications: NotificationItem[] = [
   {
     id: 'patient-appointment-reminder',
     title: 'Nhắc lịch khám ngày mai',
-    description: 'Bạn có lịch hẹn vào 09:00 ngày 05/06 tại Fakeeh Care Group. Hãy đến trước 15 phút.',
+    description: 'Bạn có lịch hẹn vào 09:00 ngày 05/06 tại NovaCare Clinic. Hãy đến trước 15 phút.',
     time: '5 giờ trước',
     tone: 'bg-amber-100 text-amber-600',
     targetLabel: 'Đặt lịch khám',

@@ -23,7 +23,7 @@ export default function DoctorSidebar({
     >
       <div className="flex h-14 items-center gap-2.5 border-b border-slate-200 px-4">
         <LogoMark />
-        <span className="text-sm font-semibold text-slate-700">Fakeeh Care Group</span>
+        <span className="text-sm font-semibold text-slate-700">NovaCare Clinic</span>
       </div>
       <nav className="space-y-1 px-3 py-4">
         {doctorModules.map((item) => {

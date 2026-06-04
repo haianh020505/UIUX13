@@ -664,7 +664,7 @@ function PrintPreviewModal({
         <div className="max-h-[70vh] overflow-y-auto bg-slate-100 p-5 print-modal-body">
           <article className="mx-auto min-h-[720px] max-w-[620px] bg-white p-8 text-slate-800 shadow-lg printable-sheet">
             <div className="border-b border-slate-300 pb-4 text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Fakeeh Care Group</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">NovaCare Clinic</p>
               <h2 className="mt-2 text-xl font-extrabold uppercase text-slate-900">Phiếu Chỉ định & Đơn thuốc</h2>
             </div>
 
