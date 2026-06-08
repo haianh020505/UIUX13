@@ -67,7 +67,14 @@ const WaitingListTable = forwardRef<HTMLElement, WaitingListTableProps>(function
         </div>
       </div>
       <div className="waiting-table-scroll">
-        <table className="waiting-table waiting-table--fit">
+        <table className="data-table waiting-table waiting-table--fit">
+          <colgroup>
+            <col style={{ width: '90px' }} />
+            <col style={{ width: '220px' }} />
+            <col />
+            <col style={{ width: '130px' }} />
+            <col style={{ width: '140px' }} />
+          </colgroup>
           <thead>
             <tr>
               <th>Giờ</th>

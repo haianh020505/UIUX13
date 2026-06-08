@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { CalendarDays, Loader2, Search, X } from 'lucide-react';
-import type { LabResult, Patient, PrescriptionItem, SavedEmrEntry } from '../types';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AlertTriangle, CalendarDays, ClipboardList, Loader2, Search, X } from 'lucide-react';
+import type { Appointment, LabResult, Patient, PrescriptionItem, SavedEmrEntry } from '../types';
+import { hasRecordedAllergy } from '../data';
 
 const labServiceCatalog = [
   'Nội soi Tai Mũi Họng ống mềm',
@@ -21,10 +22,16 @@ const popularLabServices = ['Nội soi Tai Mũi Họng', 'X-Quang Ngực', 'Côn
 
 export default function OrdersView({
   patient,
+  appointment,
+  onBack,
+  onRequestFinishExam,
   onNotify,
   onSavedToEmr,
 }: {
-  patient: Patient;
+  patient: Patient | null;
+  appointment?: Appointment;
+  onBack: () => void;
+  onRequestFinishExam: () => void;
   onNotify: (message: string) => void;
   onSavedToEmr: (entry: SavedEmrEntry) => void;
 }) {
@@ -107,6 +114,7 @@ export default function OrdersView({
   };
 
   const handleSaveEMR = () => {
+    if (!patient) return;
     if (isSubmitting) return;
     setIsSubmitting(true);
     window.setTimeout(() => {
@@ -180,24 +188,86 @@ export default function OrdersView({
     onNotify('Đã xóa chỉ định');
   };
 
+  if (!patient) {
+    return (
+      <div className="empty-state">
+        <ClipboardList size={40} />
+        <h3>Chưa có bệnh nhân đang khám</h3>
+        <p>Gọi bệnh nhân vào khám từ lịch khám hôm nay để bắt đầu.</p>
+        <button type="button" className="secondary-action" onClick={onBack}>
+          Xem lịch khám hôm nay
+        </button>
+      </div>
+    );
+  }
+
+  const hasAllergy = hasRecordedAllergy(patient.allergy);
+
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-bold text-slate-800">Chỉ định & Kê đơn</h2>
-        <p className="mt-1 text-sm font-bold text-brand">Đang khám: BN. {patient.name} ({patient.code})</p>
-      </div>
+      <section className="panel">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <button type="button" onClick={onBack} className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-brand active:scale-[0.98]">
+              ← Quay lại lịch khám
+            </button>
+            <h2 className="text-xl font-bold text-slate-900">{patient.name} | {patient.code} | {appointment?.time ?? 'Chưa có khung giờ'}</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              {patient.gender}, {patient.age} tuổi, Phòng 203
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onRequestFinishExam}
+            className="inline-flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-bold transition active:scale-[0.98]"
+            style={{
+              borderColor: 'var(--color-danger)',
+              background: 'transparent',
+              color: 'var(--color-danger)',
+            }}
+          >
+            Kết thúc khám
+          </button>
+        </div>
+      </section>
 
       {/* Patient Safety Banner */}
-      <div className="bg-red-50 border border-red-100 p-3 rounded-lg flex flex-wrap items-center gap-6 text-sm mb-6">
+      <div className={`rounded-lg border p-3 flex flex-wrap items-center gap-6 text-sm mb-6 ${hasAllergy ? 'border-red-100 bg-red-50' : 'border-slate-200 bg-white'}`}>
         <span className="font-semibold text-slate-700">Chỉ số sinh tồn:</span>
         <span className="text-slate-600">
           Cân nặng: <strong>{patient.weight}</strong> | Chiều cao: <strong>{patient.height}</strong>
         </span>
         <span className="h-4 w-px bg-slate-200 hidden md:block"></span>
-        <span className="text-rose-700 font-extrabold text-sm">
-          ⚠️ DỊ ỨNG: {patient.allergy}
-        </span>
+        {hasAllergy ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-extrabold text-rose-700">
+            <AlertTriangle size={16} /> DỊ ỨNG: {patient.allergy}
+          </span>
+        ) : (
+          <span className="text-sm font-bold text-slate-500">Dị ứng: {patient.allergy}</span>
+        )}
       </div>
+
+      <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <article className="rounded-lg border border-sky-100 bg-sky-50 p-4 shadow-sm">
+          <h3 className="panel-title">AI Summary</h3>
+          <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+            {appointment ? `${appointment.summary}. ${appointment.note}` : patient.diagnosis}
+          </p>
+        </article>
+        <article className="panel">
+          <h3 className="panel-title">Hồ sơ EMR tóm tắt</h3>
+          <dl className="mt-3 grid gap-2 text-sm">
+            <div className="flex gap-3">
+              <dt className="w-28 shrink-0 font-bold text-slate-500">Tiền sử</dt>
+              <dd className="text-slate-700">{patient.history.join(', ')}</dd>
+            </div>
+            <div className="flex gap-3">
+              <dt className="w-28 shrink-0 font-bold text-slate-500">Thuốc</dt>
+              <dd className="text-slate-700">{patient.medication}</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.45fr_0.8fr]">
         <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -576,6 +646,9 @@ function OrderPreview({
 
 function SmartFollowUpDatePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<{ top: number; left: number; width: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const quickOptions = [
     { label: '3 ngày', days: 3 },
     { label: '1 tuần', days: 7 },
@@ -590,11 +663,61 @@ function SmartFollowUpDatePicker({ value, onChange }: { value: string; onChange:
     setOpen(false);
   };
 
+  useLayoutEffect(() => {
+    if (!open) {
+      setPopoverStyle(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      const popover = popoverRef.current;
+      if (!trigger || !popover) return;
+
+      const rootStyles = getComputedStyle(document.documentElement);
+      const viewportPadding = Number.parseFloat(rootStyles.getPropertyValue('--spacing-md'));
+      const triggerGap = Number.parseFloat(rootStyles.getPropertyValue('--spacing-xs'));
+      const triggerRect = trigger.getBoundingClientRect();
+      const popoverWidth = Math.min(
+        Math.max(triggerRect.width, popover.offsetWidth),
+        window.innerWidth - viewportPadding * 2,
+      );
+      const popoverHeight = popover.offsetHeight;
+      const openUpward = triggerRect.bottom + triggerGap + popoverHeight > window.innerHeight - viewportPadding;
+      const preferredTop = openUpward
+        ? triggerRect.top - popoverHeight - triggerGap
+        : triggerRect.bottom + triggerGap;
+      const maxLeft = Math.max(viewportPadding, window.innerWidth - popoverWidth - viewportPadding);
+
+      setPopoverStyle({
+        top: Math.min(
+          Math.max(viewportPadding, preferredTop),
+          Math.max(viewportPadding, window.innerHeight - popoverHeight - viewportPadding),
+        ),
+        left: Math.min(Math.max(viewportPadding, triggerRect.right - popoverWidth), maxLeft),
+        width: popoverWidth,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open]);
+
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          setPopoverStyle(null);
+          setOpen((current) => !current);
+        }}
         className="form-input flex w-full cursor-pointer items-center justify-between bg-white text-left font-semibold text-slate-600"
       >
         <span>{value ? formatFollowUpDisplay(value) : '- Chưa hẹn -'}</span>
@@ -602,7 +725,11 @@ function SmartFollowUpDatePicker({ value, onChange }: { value: string; onChange:
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-full min-w-[300px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+        <div
+          ref={popoverRef}
+          className="follow-up-datepicker-popover fixed z-[9999] rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
+          style={popoverStyle ?? { top: 0, left: 0, visibility: 'hidden' }}
+        >
           <div className="mb-3 flex flex-wrap gap-2">
             {quickOptions.map((option) => (
               <button
@@ -651,7 +778,7 @@ function PrintPreviewModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 px-4 backdrop-blur-sm print-modal-overlay">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-2xl print-modal-content">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 print:hidden">
+        <div className="no-print flex items-center justify-between border-b border-slate-200 px-5 py-4 print:hidden">
           <div>
             <h3 className="text-base font-extrabold text-slate-900">Xem & In phiếu</h3>
             <p className="text-xs font-semibold text-slate-500">Bản xem trước phiếu chỉ định và đơn thuốc</p>
@@ -662,7 +789,7 @@ function PrintPreviewModal({
         </div>
 
         <div className="max-h-[70vh] overflow-y-auto bg-slate-100 p-5 print-modal-body">
-          <article className="mx-auto min-h-[720px] max-w-[620px] bg-white p-8 text-slate-800 shadow-lg printable-sheet">
+          <article className="print-content mx-auto min-h-[720px] max-w-[620px] bg-white p-8 text-slate-800 shadow-lg printable-sheet">
             <div className="border-b border-slate-300 pb-4 text-center">
               <p className="text-xs font-bold uppercase tracking-widest text-slate-500">NovaCare Clinic</p>
               <h2 className="mt-2 text-xl font-extrabold uppercase text-slate-900">Phiếu Chỉ định & Đơn thuốc</h2>
@@ -711,9 +838,9 @@ function PrintPreviewModal({
           </article>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4 print:hidden">
-          <button type="button" onClick={onClose} className="ghost-action cursor-pointer">Đóng</button>
-          <button type="button" onClick={onPrint} className="secondary-action cursor-pointer">In phiếu</button>
+        <div className="no-print flex justify-end gap-2 border-t border-slate-200 px-5 py-4 print:hidden">
+          <button type="button" onClick={onClose} className="ghost-action no-print cursor-pointer">Đóng</button>
+          <button type="button" onClick={onPrint} className="secondary-action no-print cursor-pointer">In phiếu</button>
         </div>
       </div>
     </div>

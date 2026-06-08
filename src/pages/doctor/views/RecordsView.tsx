@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { labResults, patients } from '../data';
+import { hasRecordedAllergy, labResults, patients } from '../data';
 import type { LabResult, Patient, SavedEmrEntry } from '../types';
 import { SearchInput } from '../components/shared';
+import SharedPagination from '../../../components/common/Pagination';
+import useDynamicPageSize from '../../../components/common/useDynamicPageSize';
 
 type PatientSortMode = 'recent' | 'nameAsc' | 'nameDesc';
 type RecordTab = 'visits' | 'labs';
@@ -12,7 +14,7 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
   const [searchInput, setSearchInput] = useState('');
   const [sortMode, setSortMode] = useState<PatientSortMode>('recent');
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = useDynamicPageSize(5);
 
   const visiblePatients = useMemo(() => {
     const normalizedQuery = normalizeSearchText(searchInput);
@@ -74,15 +76,15 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
           </select>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full table-fixed text-left text-sm">
+          <table className="data-table min-w-full text-left text-sm">
             <colgroup>
-              <col style={{width:'100px'}} />
-              <col style={{width:'180px'}} />
-              <col style={{width:'130px'}} />
-              <col />
-              <col style={{width:'100px'}} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '38%' }} />
+              <col style={{ width: '16%' }} />
             </colgroup>
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase text-slate-500"><tr><th className="px-4 py-3">Mã BN</th><th className="px-4 py-3">Bệnh nhân</th><th className="px-4 py-3">Ngày khám cuối</th><th className="px-4 py-3">Chẩn đoán gần nhất</th><th className="px-4 py-3 text-right">Hành động</th></tr></thead>
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase text-slate-500"><tr><th className="px-4 py-3">Mã BN</th><th className="px-4 py-3">Bệnh nhân</th><th className="px-4 py-3">Ngày khám cuối</th><th className="px-4 py-3">Chẩn đoán gần nhất</th><th className="px-2 py-3 text-center">Chi tiết</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
               {pagedPatients.map((patient) => (
                 <tr
@@ -102,16 +104,16 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
                     {patient.diagnosis}
                     <span className="block text-xs text-slate-500">{patient.doctor}</span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-2 py-3 text-center">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenRecord(patient.code);
                       }}
-                      className="cursor-pointer rounded-md border border-brand px-3 py-1.5 text-xs font-bold text-brand transition hover:bg-sky-50 active:scale-[0.98]"
+                      className="filter-chip border-transparent bg-sky-50 text-brand"
                     >
-                      Xem chi tiết
+                      Xem
                     </button>
                   </td>
                 </tr>
@@ -124,7 +126,7 @@ export function RecordsView({ onOpenRecord, onNotify }: { onOpenRecord: (code: s
             </div>
           ) : null}
         </div>
-        {totalPages > 1 ? <Pagination currentPage={page} totalPages={totalPages} totalItems={visiblePatients.length} pageSize={pageSize} onChange={setPage} /> : null}
+        <SharedPagination page={page} totalPages={totalPages} total={visiblePatients.length} pageSize={pageSize} unit="hồ sơ" onChange={setPage} />
       </section>
     </div>
   );
@@ -302,9 +304,10 @@ export function RecordDetailView({
   const selectedVisitLabResults = selectedVisit
     ? patientLabResults.filter((item) => item.visitDate === selectedVisit.date)
     : [];
+  const hasAllergy = hasRecordedAllergy(patient.allergy);
 
   return (
-    <div className="space-y-4">
+    <div className="emr-detail-container space-y-4">
       <button type="button" onClick={onBack} className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-brand active:scale-[0.98]">Danh sách EMR / <span className="text-brand">{patient.name}</span></button>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -325,7 +328,7 @@ export function RecordDetailView({
         </div>
       </section>
       <section className="grid gap-4 xl:grid-cols-[0.8fr_1.4fr]">
-        <article className="panel space-y-4"><h3 className="panel-title">Thông tin y tế cơ bản</h3><InfoBox title="Dị ứng (BN tự khai báo)" danger text={patient.allergy} /><InfoBox title="Tiền sử bệnh lý" text={patient.history.join(' · ')} /><InfoBox title="Tiền sử gia đình" text={patient.family} /><InfoBox title="Thuốc đang dùng định kỳ" info text={patient.medication} /></article>
+        <article className="panel space-y-4"><h3 className="panel-title">Thông tin y tế cơ bản</h3><InfoBox title="Dị ứng (BN tự khai báo)" danger={hasAllergy} text={patient.allergy} /><InfoBox title="Tiền sử bệnh lý" text={patient.history.join(' · ')} /><InfoBox title="Tiền sử gia đình" text={patient.family} /><InfoBox title="Thuốc đang dùng định kỳ" info text={patient.medication} /></article>
         <article className="panel">
           <div className="flex gap-4 border-b border-slate-200">
             <button
@@ -367,7 +370,7 @@ export function RecordDetailView({
                   </p>
                   <div className="mt-1">
                     <span className="inline-block text-xs text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      Xem chi tiết đợt khám →
+                      Xem chi tiết đợt khám <ChevronRight size={13} />
                     </span>
                   </div>
                 </div>
@@ -394,7 +397,7 @@ export function RecordDetailView({
                     </span>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">{result.description}</p>
-                  <p className="mt-2 text-xs font-bold text-blue-600">Xem hình ảnh & kết quả chi tiết →</p>
+                  <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-600">Xem hình ảnh & kết quả chi tiết <ChevronRight size={13} /></p>
                 </button>
               ))}
               {!patientLabResults.length ? (
@@ -496,7 +499,12 @@ export function RecordDetailView({
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Đơn thuốc chi tiết</h4>
               <div className="overflow-hidden border border-slate-200/80 rounded-xl">
-                <table className="min-w-full text-left text-xs">
+                <table className="data-table min-w-full text-left text-xs">
+                  <colgroup>
+                    <col style={{ width: '190px' }} />
+                    <col style={{ width: '64px' }} />
+                    <col />
+                  </colgroup>
                   <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2.5">Tên thuốc / Hàm lượng</th>
@@ -532,7 +540,7 @@ export function RecordDetailView({
                       onClick={() => openLabResult(result)}
                       className="shrink-0 text-blue-600 font-bold hover:underline active:scale-95 transition"
                     >
-                      Xem kết quả ↗
+                      Xem kết quả <ChevronRight size={13} />
                     </button>
                   </div>
                 ))}

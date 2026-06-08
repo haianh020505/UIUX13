@@ -6,7 +6,6 @@ import {
   Heart, 
   Calendar, 
   User, 
-  Clock, 
   ArrowLeft,
   BookOpen,
   ChevronLeft,
@@ -17,11 +16,20 @@ import {
   Stethoscope
 } from 'lucide-react';
 import { healthArticles } from './data';
-import type { HealthArticle } from './types';
 
 interface PatientArticlesProps {
   selectedArticleId: string | null;
   onCloseArticle: () => void;
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export default function PatientArticles({ selectedArticleId, onCloseArticle }: PatientArticlesProps) {
@@ -30,7 +38,7 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
   const [savedArticleIds, setSavedArticleIds] = useState<string[]>([]);
   const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 9;
 
   // Sync prop selectedArticleId with local state activeArticleId
   useEffect(() => {
@@ -101,8 +109,14 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
 
   // Filter articles based on selected categories and search query
   const filteredArticles = sortedArticles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          article.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const queryTokens = normalizeSearchText(searchQuery).split(' ').filter(Boolean);
+    const searchableText = normalizeSearchText([
+      article.title,
+      article.category,
+      article.author,
+      ...article.content,
+    ].join(' '));
+    const matchesSearch = queryTokens.length === 0 || queryTokens.every((token) => searchableText.includes(token));
     
     if (selectedCategories.includes('Tất cả')) return matchesSearch;
     return selectedCategories.includes(article.category) && matchesSearch;
@@ -130,7 +144,7 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
       case 'Đời sống':
         return <Activity size={14} className="shrink-0" />;
       default:
-        return <BookOpen size={14} className="shrink-0" />;
+        return null;
     }
   };
 
@@ -236,11 +250,6 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
                 <Calendar size={14} className="articles-meta-icon" />
                 <span>Đăng ngày: <strong>{currentArticle.publishedAt}</strong></span>
               </span>
-              <span className="articles-reader-meta-dot">•</span>
-              <span className="articles-reader-meta-item">
-                <Clock size={14} className="articles-meta-icon" />
-                <span>Thời gian đọc: <strong>{currentArticle.readTime}</strong></span>
-              </span>
             </div>
 
             <div className="articles-reader-content">
@@ -303,9 +312,9 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
       </div>
 
       {/* MULTI-SELECT CATEGORY PILLS (SPECIALTY FILTER) */}
-      <div className="mb-6">
-        <div className="text-xs font-bold text-gray-500 uppercase mb-2">LỌC THEO CHUYÊN KHOA (CHỌN NHIỀU):</div>
-        <div className="flex flex-wrap gap-2">
+      <div className="articles-filters-row">
+        <div className="articles-filters-label">Lọc theo chuyên khoa (chọn nhiều):</div>
+        <div className="articles-filter-pills">
           {categories.map((cat) => {
             const isActive = selectedCategories.includes(cat);
             const count = getCount(cat);
@@ -314,17 +323,11 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
                 key={cat}
                 type="button"
                 onClick={() => toggleCategory(cat)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 border rounded-full text-sm font-semibold transition-colors duration-200 cursor-pointer ${
-                  isActive
-                    ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
-                }`}
+                className={`articles-filter-pill ${isActive ? 'articles-filter-pill--active' : ''}`}
               >
                 {getCategoryIcon(cat)}
                 <span>{cat}</span>
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] font-bold transition-colors duration-200 ${
-                  isActive ? 'bg-white text-blue-600' : 'bg-gray-100 text-gray-600'
-                }`}>
+                <span className="articles-filter-badge">
                   {count}
                 </span>
               </button>
@@ -357,8 +360,7 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
                       <button
                         type="button"
                         onClick={(e) => toggleBookmark(article.id, e)}
-                        className={`articles-bookmark ${isSaved ? 'articles-bookmark--saved' : ''}`}
-                        style={{ position: 'absolute', right: '12px', top: '12px', zIndex: 5 }}
+                        className={`articles-bookmark articles-bookmark--floating ${isSaved ? 'articles-bookmark--saved' : ''}`}
                         aria-label="Bookmark article"
                       >
                         <Heart size={15} fill={isSaved ? "currentColor" : "none"} />
@@ -378,17 +380,15 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
 
                   {/* Metadata Footer */}
                   <div className="articles-card-footer">
-                    <span className="articles-meta" style={{ maxWidth: '110px' }}>
+                    <span className="articles-meta articles-meta--author">
                       <User size={12} className="articles-meta-icon" />
-                      <span className="truncate">{article.author}</span>
+                      <span>{article.author}</span>
                     </span>
-                    <span className="articles-meta">
-                      <Calendar size={12} className="articles-meta-icon" />
-                      {article.publishedAt}
-                    </span>
-                    <span className="articles-meta" style={{ marginLeft: 'auto' }}>
-                      <Clock size={12} className="articles-meta-icon" />
-                      {article.readTime}
+                    <span className="articles-meta-info">
+                      <span className="articles-meta">
+                        <Calendar size={12} className="articles-meta-icon" />
+                        {article.publishedAt}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -438,19 +438,21 @@ export default function PatientArticles({ selectedArticleId, onCloseArticle }: P
         /* EMPTY STATE */
         <div className="articles-empty">
           <div className="articles-empty-icon">
-            <BookOpen size={24} />
+            <Search size={24} />
           </div>
-          <h3 className="articles-empty-title">Không tìm thấy bài viết nào</h3>
+          <h3 className="articles-empty-title">Không tìm thấy bài viết</h3>
           <p className="articles-empty-desc">
-            Hãy thử tìm kiếm với từ khóa khác hoặc điều chỉnh các chuyên khoa đang lọc.
+            {searchQuery
+              ? `Không có kết quả cho "${searchQuery}".`
+              : 'Chưa có bài viết trong chuyên khoa này.'}{' '}
+            Thử tìm với từ khóa khác hoặc xem tất cả.
           </p>
           <button
             onClick={() => { setSearchQuery(''); setSelectedCategories(['Tất cả']); }}
-            className="btn-secondary"
-            style={{ marginTop: 'var(--spacing-md)' }}
+            className="articles-empty-action"
             type="button"
           >
-            Đặt lại bộ lọc
+            Xem tất cả bài viết
           </button>
         </div>
       )}

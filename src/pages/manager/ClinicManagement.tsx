@@ -2,7 +2,7 @@ import { ChevronDown, Eye, EyeOff, Flag, Pencil, Plus, Reply, Trash2, X } from '
 import { FormEvent, ReactNode, useMemo, useState } from 'react';
 import ResponsiveTable from '../../components/common/ResponsiveTable';
 import { clinicTabs } from './data';
-import type { ClinicTab } from './types';
+import type { ClinicTab, OperationStatus } from './types';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
 import ReviewText from './components/ReviewText';
@@ -50,7 +50,7 @@ type ConfirmState = {
 
 const doctors = ['BS. Trần Văn A', 'BS. Lê Thị C', 'BS. Phạm Minh D', 'BS. Nguyễn Thu Hương'];
 const schedules = ['Thứ 2 - Thứ 7 (08:00 - 17:30)', 'Thứ 2 - Thứ 6 (07:30 - 17:00)', 'Hằng ngày (08:00 - 20:00)'];
-const operationStatuses = ['Mở cửa hoạt động', 'Tạm ngưng tiếp nhận', 'Đóng cửa bảo trì'];
+const operationStatuses: OperationStatus[] = ['Mở cửa hoạt động', 'Đóng cửa bảo trì'];
 const serviceDurations = ['10 - 15 phút', '15 - 20 phút', '20 - 30 phút', '30 - 45 phút', '45 - 60 phút'];
 
 const initialSpecialties: Specialty[] = [
@@ -94,7 +94,19 @@ function nextCode(prefix: string, items: { id: string }[]) {
   return `${prefix}-${String(maxNumber + 1).padStart(2, '0')}`;
 }
 
-export default function ClinicManagement({ activeTab, onTabChange, onNotify }: { activeTab: ClinicTab; onTabChange: (tab: ClinicTab) => void; onNotify?: (message: string) => void }) {
+export default function ClinicManagement({
+  activeTab,
+  operationStatus,
+  onOperationStatusChange,
+  onTabChange,
+  onNotify,
+}: {
+  activeTab: ClinicTab;
+  operationStatus: OperationStatus;
+  onOperationStatusChange: (status: OperationStatus) => void;
+  onTabChange: (tab: ClinicTab) => void;
+  onNotify?: (message: string) => void;
+}) {
   const [specialties, setSpecialties] = useState<Specialty[]>(initialSpecialties);
   const [services, setServices] = useState<Service[]>(initialServices);
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
@@ -163,7 +175,13 @@ export default function ClinicManagement({ activeTab, onTabChange, onNotify }: {
       <h1 className="mb-4 text-xl font-bold text-slate-800">Quản lý phòng khám</h1>
       <ClinicTabs activeTab={activeTab} onTabChange={onTabChange} />
       <div className="mt-5">
-        {activeTab === 'info' ? <ClinicInfo onNotify={onNotify} /> : null}
+        {activeTab === 'info' ? (
+          <ClinicInfo
+            operationStatus={operationStatus}
+            onOperationStatusChange={onOperationStatusChange}
+            onNotify={onNotify}
+          />
+        ) : null}
         {activeTab === 'specialties' ? (
           <SpecialtyList
             specialties={specialties}
@@ -243,9 +261,17 @@ function ClinicTabs({ activeTab, onTabChange }: { activeTab: ClinicTab; onTabCha
   );
 }
 
-function ClinicInfo({ onNotify }: { onNotify?: (message: string) => void }) {
+function ClinicInfo({
+  operationStatus: savedOperationStatus,
+  onOperationStatusChange,
+  onNotify,
+}: {
+  operationStatus: OperationStatus;
+  onOperationStatusChange: (status: OperationStatus) => void;
+  onNotify?: (message: string) => void;
+}) {
   const [schedule, setSchedule] = useState(schedules[0]);
-  const [operationStatus, setOperationStatus] = useState(operationStatuses[0]);
+  const [operationStatus, setOperationStatus] = useState<OperationStatus>(savedOperationStatus);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
@@ -269,10 +295,10 @@ function ClinicInfo({ onNotify }: { onNotify?: (message: string) => void }) {
           <SelectMenu
             value={operationStatus}
             options={operationStatuses}
-            onChange={setOperationStatus}
+            onChange={(value) => setOperationStatus(value as OperationStatus)}
             renderValue={(value) => (
-              <span className={`inline-flex items-center gap-2 font-bold ${value === 'Mở cửa hoạt động' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                <span className={`h-2 w-2 rounded-full ${value === 'Mở cửa hoạt động' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              <span className={`inline-flex items-center gap-2 font-bold ${value === 'Mở cửa hoạt động' ? 'text-emerald-600' : 'text-red-600'}`}>
+                <span className={`h-2 w-2 rounded-full ${value === 'Mở cửa hoạt động' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                 {value}
               </span>
             )}
@@ -292,6 +318,7 @@ function ClinicInfo({ onNotify }: { onNotify?: (message: string) => void }) {
           confirmText="Lưu thông tin"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
+            onOperationStatusChange(operationStatus);
             setConfirmOpen(false);
             onNotify?.('Đã lưu thông tin cơ sở');
           }}

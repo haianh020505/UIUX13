@@ -93,8 +93,8 @@ export const mockConditions: ChronicCondition[] = [];
 
 /* ── Metric Card Configurations ── */
 export const metricConfigs: MetricConfig[] = [
-  { key: 'height', label: 'Chiều cao', unit: 'cm', icon: '📏' },
-  { key: 'weight', label: 'Cân nặng', unit: 'kg', icon: '⚖️' },
+  { key: 'height', label: 'Chiều cao', unit: 'cm', icon: '' },
+  { key: 'weight', label: 'Cân nặng', unit: 'kg', icon: '' },
 ];
 
 /* ── BMI Category Thresholds ── */
@@ -150,11 +150,11 @@ export function getSourceLabel(source: string): { label: string; className: stri
 export function getSeverityConfig(severity: string) {
   switch (severity) {
     case 'severe':
-      return { label: 'Nghiêm trọng', icon: '🚨', className: 'severity--severe' };
+      return { label: 'Nghiêm trọng', icon: '', className: 'severity--severe' };
     case 'moderate':
-      return { label: 'Trung bình', icon: '⚠️', className: 'severity--moderate' };
+      return { label: 'Trung bình', icon: '', className: 'severity--moderate' };
     case 'mild':
-      return { label: 'Nhẹ', icon: 'ℹ️', className: 'severity--mild' };
+      return { label: 'Nhẹ', icon: '', className: 'severity--mild' };
     default:
       return { label: severity, icon: '', className: '' };
   }

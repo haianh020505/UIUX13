@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ClipboardList, FlaskConical, MessageCircle, Stethoscope } from 'lucide-react';
 import { getPatient, labResults, consultationRequests } from '../../data';
 
 type UpdateTab = 'all' | 'patients' | 'medical' | 'system';
@@ -22,7 +23,7 @@ export default function UpdatesPanel({
       description: lr.description,
       timeLabel: lr.timeLabel,
       isNew: lr.status === 'Mới',
-      icon: '🔬',
+      Icon: FlaskConical,
     })),
     ...consultationRequests.map((cr) => ({
       id: `consult-${cr.patientCode}-${cr.title}`,
@@ -32,7 +33,7 @@ export default function UpdatesPanel({
       description: cr.summary,
       timeLabel: cr.timeLabel,
       isNew: cr.urgency === 'Khẩn cấp',
-      icon: '💬',
+      Icon: MessageCircle,
     })),
     {
       id: 'system-update-1',
@@ -42,7 +43,7 @@ export default function UpdatesPanel({
       description: 'Đã thêm vị trí mới vào danh sách thuốc khả dụng.',
       timeLabel: '30 phút trước',
       isNew: false,
-      icon: '📋',
+      Icon: ClipboardList,
     },
     {
       id: 'system-update-2',
@@ -52,7 +53,7 @@ export default function UpdatesPanel({
       description: 'Đã cập nhật phác đồ điều trị bệnh mạn tính.',
       timeLabel: '1 giờ trước',
       isNew: false,
-      icon: '⚕️',
+      Icon: Stethoscope,
     },
   ];
 
@@ -88,9 +89,10 @@ export default function UpdatesPanel({
       <div className="updates-list">
         {filteredUpdates.slice(0, 5).map((update) => {
           const patient = update.patientCode ? getPatient(update.patientCode) : null;
+          const Icon = update.Icon;
           return (
             <article key={update.id} className="update-item">
-              <div className="update-icon">{update.icon}</div>
+              <div className="update-icon"><Icon size={18} /></div>
               <div className="update-content">
                 <p className="update-title">
                   {update.title}

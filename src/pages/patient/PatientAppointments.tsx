@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarPlus, MapPin, Clock, CheckCircle2, Download, FileText, Pill, X } from 'lucide-react';
+import { CalendarPlus, ClipboardList, MapPin, Clock, CheckCircle2, Download, FileText, Pill, X } from 'lucide-react';
 import ConfirmDialog from '../manager/components/ConfirmDialog';
 import type { AppointmentData, AppointmentStatus, BookingContext } from './types';
+import SharedPagination from '../../components/common/Pagination';
+import useDynamicPageSize from '../../components/common/useDynamicPageSize';
 
 type TabId = 'upcoming' | 'pending' | 'history';
 
@@ -64,6 +66,8 @@ export default function PatientAppointments({
   const [detailTarget, setDetailTarget] = useState<AppointmentData | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(externalToast ?? null);
+  const [page, setPage] = useState(1);
+  const pageSize = useDynamicPageSize(5);
   const detailCloseTimer = useRef<number | null>(null);
 
   /* Auto-dismiss toast after 3s */
@@ -106,6 +110,16 @@ export default function PatientAppointments({
 
   const currentList =
     activeTab === 'upcoming' ? upcoming : activeTab === 'pending' ? pending : history;
+  const totalPages = Math.max(1, Math.ceil(currentList.length / pageSize));
+  const pagedList = currentList.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   /* ── Cancel flow ── */
   const handleCancelConfirm = () => {
@@ -243,7 +257,7 @@ export default function PatientAppointments({
         {/* Empty state */}
         {currentList.length === 0 ? (
           <div className="appt-empty-state" role="status">
-            <span className="appt-empty-state__icon">📋</span>
+            <span className="appt-empty-state__icon"><ClipboardList size={32} /></span>
             <h3>
               {activeTab === 'upcoming'
                 ? 'Chưa có lịch hẹn sắp tới'
@@ -272,7 +286,7 @@ export default function PatientAppointments({
         ) : null}
 
         {/* Appointment cards */}
-        {currentList.map((appt) => {
+        {pagedList.map((appt) => {
           const { day, month, year } = parseDate(appt.date);
           return (
             <div key={appt.id} className="appointment-card">
@@ -376,6 +390,7 @@ export default function PatientAppointments({
             </div>
           );
         })}
+        <SharedPagination page={page} totalPages={totalPages} total={currentList.length} pageSize={pageSize} unit="lịch hẹn" onChange={setPage} />
       </div>
     </>
   );
@@ -596,7 +611,7 @@ function PreviewModal({
           </div>
 
           {isPrescription ? (
-            <PrescriptionPreview appointment={appointment} />
+            <PrescriptionPreview />
           ) : (
             <LabResultPreview />
           )}
@@ -606,7 +621,7 @@ function PreviewModal({
   );
 }
 
-function PrescriptionPreview({ appointment }: { appointment: AppointmentData }) {
+function PrescriptionPreview() {
   return (
     <>
       <section className="mt-6">
@@ -627,19 +642,9 @@ function PrescriptionPreview({ appointment }: { appointment: AppointmentData }) 
         </div>
       </section>
 
-      <footer className="mt-6 rounded-lg border border-dashed border-slate-200 bg-white p-4">
-        <div className="flex items-end justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-500">Lời dặn của bác sĩ</p>
-            <p className="mt-1 text-sm font-bold text-slate-800">Tái khám sau 5 ngày nếu không đỡ</p>
-          </div>
-          <div className="shrink-0 text-right opacity-40">
-            <div className="rotate-[-8deg] rounded-full border-2 border-blue-500 px-5 py-3 text-xs font-black uppercase tracking-wide text-blue-600">
-              Đã ký
-            </div>
-            <p className="mt-3 text-xs font-bold text-slate-500">{appointment.doctor}</p>
-          </div>
-        </div>
+      <footer className="mt-4 rounded-lg border border-dashed border-slate-200 bg-white p-3">
+        <p className="text-sm font-semibold text-slate-500">Lời dặn của bác sĩ</p>
+        <p className="mt-1 text-sm font-bold text-slate-800">Tái khám sau 5 ngày nếu không đỡ</p>
       </footer>
     </>
   );
@@ -650,7 +655,7 @@ function LabResultPreview() {
     <section className="mt-6">
       <h3 className="text-base font-extrabold text-slate-900">Bảng kết quả</h3>
       <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
-        <table className="w-full min-w-[520px] text-left text-sm">
+        <table className="data-table w-full min-w-[520px] text-left text-sm">
           <thead className="bg-slate-50 text-xs font-extrabold uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Chỉ số</th>

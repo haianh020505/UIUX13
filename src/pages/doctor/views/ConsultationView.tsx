@@ -60,8 +60,8 @@ export default function ConsultationView({
   };
 
   return (
-    <div className="grid h-[calc(100dvh-6.5rem)] min-h-[520px] gap-4 xl:grid-cols-[0.8fr_1.35fr_0.85fr]">
-      <aside className="flex min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="consultation-layout">
+      <aside className="consultation-queue">
         <h2 className="panel-title">Ca chờ tư vấn ({unresolvedCount})</h2>
         <div className="mt-3">
           <SearchInput placeholder="Tìm kiếm..." />
@@ -77,7 +77,7 @@ export default function ConsultationView({
                 key={`${item.patientCode}-${item.title}`}
                 type="button"
                 onClick={() => setActiveCode(item.patientCode)}
-                className={`w-full cursor-pointer rounded-md border px-3 py-2.5 text-left transition hover:border-brand active:scale-[0.99] ${
+                className={`consultation-queue-item ${
                   active
                     ? 'border-sky-100 bg-sky-50'
                     : resolved
@@ -148,32 +148,32 @@ export default function ConsultationView({
       )}
 
       {activeRequest && activePatient ? (
-        <aside className="flex min-h-0 flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
+        <aside className="consultation-ai-panel">
           <div className={`border-b px-4 py-3 ${activeRequest.urgency === 'Khẩn cấp' ? 'border-rose-100 bg-rose-50' : 'border-slate-100 bg-slate-50'}`}>
             <h3 className={`font-bold ${activeRequest.urgency === 'Khẩn cấp' ? 'text-rose-600' : 'text-slate-700'}`}>Tóm tắt từ Chatbot AI</h3>
           </div>
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="consultation-ai-body">
             <InfoBlock title="Vấn đề chính:" lines={[activeRequest.title, activeRequest.summary]} />
             <InfoBlock title="Đánh giá nguy cơ (AI):" badge={activeRequest.urgency === 'Khẩn cấp' ? 'Cao (Khẩn cấp)' : 'Bình thường'} />
             <InfoBlock title="Hồ sơ liên quan:" lines={[`${activePatient.code} - ${activePatient.age} tuổi`, activePatient.diagnosis]} />
             <label className="block border-t border-slate-100 pt-4">
               <span className="mb-1.5 block text-sm font-medium text-slate-700">Ghi kết luận tư vấn</span>
-              <textarea className="form-textarea" placeholder="Ghi chú lâm sàng ngắn gọn..." />
+              <textarea className="form-textarea" rows={4} placeholder="Ghi chú lâm sàng ngắn gọn..." />
             </label>
             <section className="border-t border-slate-100 pt-4">
               <h4 className="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-400">Hướng giải quyết</h4>
-              <div className="space-y-2">
+              <div className="consultation-actions">
                 <button
                   type="button"
                   onClick={() => handleResolveChat('appointment')}
-                  className="w-full cursor-pointer rounded-md bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+                  className="consultation-action-btn consultation-action-btn--primary"
                 >
                   Yêu cầu đặt lịch khám
                 </button>
                 <button
                   type="button"
                   onClick={() => handleResolveChat('complete')}
-                  className="w-full cursor-pointer rounded-md border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]"
+                  className="consultation-action-btn consultation-action-btn--secondary"
                 >
                   Hoàn tất tư vấn
                 </button>
@@ -182,7 +182,7 @@ export default function ConsultationView({
           </div>
         </aside>
       ) : (
-        <aside className="flex items-center justify-center rounded-lg border border-slate-200 bg-white/60 shadow-sm">
+        <aside className="consultation-ai-panel items-center justify-center">
           <MessageCircle className="h-16 w-16 text-slate-200" />
         </aside>
       )}
@@ -232,7 +232,7 @@ function InfoBlock({ title, lines, badge }: { title: string; lines?: string[]; b
   return (
     <div>
       <h4 className="mb-2 text-sm font-bold text-slate-700">{title}</h4>
-      {badge ? <span className="rounded bg-rose-50 px-2 py-1 text-xs font-bold text-rose-600">{badge}</span> : null}
+      {badge ? <span className="consultation-risk-badge">{badge}</span> : null}
       {lines ? (
         <div className="space-y-1 text-sm text-slate-600">
           {lines.map((line) => (

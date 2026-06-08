@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import { getPatient } from '../../data';
 import type { Appointment } from '../../types';
 import { GhostBlueButton, StatusPill } from '../shared';
@@ -28,14 +29,21 @@ export default function TodaySchedule({
         <p className="panel-subtitle">Danh sách ca khám trong ngày của bác sĩ</p>
       </div>
       <div className="max-h-[360px] overflow-y-auto">
-        <table className="min-w-full table-fixed text-left text-sm">
-          <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-xs font-extrabold uppercase text-slate-500">
+        <table className="data-table min-w-full text-left text-sm">
+          <colgroup>
+            <col style={{ width: '112px' }} />
+            <col style={{ width: '176px' }} />
+            <col />
+            <col style={{ width: '128px' }} />
+            <col style={{ width: '128px' }} />
+          </colgroup>
+          <thead className="sticky top-0 z-10 bg-slate-50">
             <tr>
-              <th className="w-28 px-4 py-3">Giờ</th>
-              <th className="w-44 px-4 py-3">Bệnh nhân</th>
-              <th className="px-4 py-3">Tóm tắt</th>
-              <th className="w-32 px-4 py-3">Trạng thái</th>
-              <th className="w-32 px-4 py-3 text-right">Thao tác</th>
+              <th>Giờ</th>
+              <th>Bệnh nhân</th>
+              <th>Tóm tắt</th>
+              <th>Trạng thái</th>
+              <th className="text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -81,7 +89,7 @@ export default function TodaySchedule({
           onClick={onOpenAppointments}
           className="w-full cursor-pointer py-3 text-center text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
         >
-          Xem lịch khám chi tiết -&gt;
+          <span className="inline-flex items-center justify-center gap-1">Xem lịch khám chi tiết <ChevronRight size={14} /></span>
         </button>
       </div>
     </section>

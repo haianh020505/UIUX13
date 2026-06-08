@@ -1,5 +1,7 @@
-import { CalendarDays, CircleUserRound, LogOut, Menu } from 'lucide-react';
+import { CircleUserRound, LogOut, Menu } from 'lucide-react';
 import NotificationBell, { type NotificationItem } from '../../components/common/NotificationBell';
+import StatusBar from '../../components/common/StatusBar';
+import type { OperationStatus } from './types';
 
 export default function ManagerHeader({
   onOpenMenu,
@@ -7,12 +9,14 @@ export default function ManagerHeader({
   onLogout,
   onOpenAccount,
   activeLabel,
+  operationStatus,
 }: {
   onOpenMenu: () => void;
   onNotificationClick: (notification: NotificationItem) => void;
   onLogout: () => void;
   onOpenAccount: () => void;
   activeLabel: string;
+  operationStatus: OperationStatus;
 }) {
   const today = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
@@ -20,6 +24,8 @@ export default function ManagerHeader({
     month: '2-digit',
     year: 'numeric',
   }).format(new Date());
+  const isOpen = operationStatus === 'Mở cửa hoạt động';
+  const statusDetail = isOpen ? undefined : operationStatus;
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-5 lg:px-6">
@@ -27,23 +33,7 @@ export default function ManagerHeader({
         <Menu size={18} />
       </button>
       <div className="hidden min-w-0 items-center gap-2.5 lg:flex">
-        <div className="flex items-center gap-2.5 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-          </span>
-          <div>
-            <p className="text-xs font-extrabold uppercase text-emerald-600">Đang vận hành</p>
-            <p className="text-xs font-semibold text-emerald-700">Mở cửa 08:00 - 17:30</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-          <CalendarDays size={16} className="text-brand" />
-          <div>
-            <p className="text-xs font-extrabold uppercase text-slate-400">Hôm nay</p>
-            <p className="text-xs font-semibold capitalize text-slate-700">{today}</p>
-          </div>
-        </div>
+        <StatusBar isOpen={isOpen} openTime="08:00" closeTime="17:30" currentDate={today} detail={statusDetail} />
       </div>
       <div className="ml-auto flex items-center gap-2.5">
         <NotificationBell onNotificationClick={onNotificationClick} />

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { CircleDollarSign, CircleUserRound, Download, Star, UserCheck, UserPlus, UsersRound, XCircle } from 'lucide-react';
+import { ChevronRight, CircleDollarSign, CircleUserRound, Download, Star, UserCheck, UserPlus, UsersRound, XCircle } from 'lucide-react';
 import ResponsiveTable from '../../components/common/ResponsiveTable';
 import { shiftRoleFilters, shiftRows } from './data';
 import type { ShiftRoleFilterId, ShiftStatus } from './types';
+import ConfirmDialog from './components/ConfirmDialog';
 import MetricCard from './components/MetricCard';
 import PatientFlowChart from './components/PatientFlowChart';
 import StaffStatus from './components/StaffStatus';
@@ -24,8 +25,9 @@ const shiftRoleLabels: Record<ShiftRoleFilterId, string> = {
   receptionist: 'Lễ tân',
 };
 
-export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffSchedule: () => void }) {
+export default function ManagerDashboard({ onOpenStaffSchedule, onNotify }: { onOpenStaffSchedule: () => void; onNotify?: (message: string) => void }) {
   const [roleFilter, setRoleFilter] = useState<ShiftRoleFilterId>('all');
+  const [confirmReport, setConfirmReport] = useState(false);
 
   const filteredShiftRows = shiftRows
     .filter((row) => row.status !== 'Nghỉ phép')
@@ -40,6 +42,18 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
 
   return (
     <div>
+      {confirmReport ? (
+        <ConfirmDialog
+          title="Tải báo cáo tổng quan?"
+          message="Hệ thống sẽ chuẩn bị báo cáo nhanh dựa trên số liệu vận hành hôm nay."
+          confirmText="Tải báo cáo"
+          onCancel={() => setConfirmReport(false)}
+          onConfirm={() => {
+            setConfirmReport(false);
+            onNotify?.('Đã tải báo cáo tổng quan hôm nay');
+          }}
+        />
+      ) : null}
       <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
         <header className="saas-greeting">
           <h1 className="saas-greeting-title">{timeGreeting}, Quản lý Admin!</h1>
@@ -47,7 +61,7 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
             Hôm nay hệ thống ghi nhận <strong>142</strong> lượt khám bệnh và <strong>34</strong> bệnh nhân mới đăng ký.
           </p>
         </header>
-        <button type="button" className="secondary-action">
+        <button type="button" className="secondary-action" onClick={() => setConfirmReport(true)}>
           <Download size={16} />
           Tải Báo Cáo
         </button>
@@ -102,6 +116,7 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
         {dashboardShiftRows.length ? (
           <ResponsiveTable
             columns={['Nhân sự', 'Vai trò / chuyên khoa', 'Ca làm việc', 'Phòng', 'Trạng thái']}
+            colWidths={[undefined, '180px', '160px', '120px', '140px']}
             rows={dashboardShiftRows.map((row) => [
               <span className="font-bold text-slate-700">{row.name}</span>,
               <span>
@@ -132,7 +147,10 @@ export default function ManagerDashboard({ onOpenStaffSchedule }: { onOpenStaffS
             onClick={onOpenStaffSchedule}
             className="w-full cursor-pointer py-3 text-center text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
           >
-            Xem toàn bộ lịch trực nhân sự →
+            <span className="inline-flex items-center justify-center gap-1">
+              Xem toàn bộ lịch trực nhân sự
+              <ChevronRight size={16} />
+            </span>
           </button>
         </div>
       </section>

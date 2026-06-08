@@ -1,6 +1,8 @@
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Download, Search, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Download, Search, X } from 'lucide-react';
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import ResponsiveTable from '../../components/common/ResponsiveTable';
+import SharedPagination from '../../components/common/Pagination';
+import useDynamicPageSize from '../../components/common/useDynamicPageSize';
 import { mockPatients } from '../../data/clinicMock';
 import ConfirmDialog from './components/ConfirmDialog';
 import DateInput, { parseDisplayDate } from './components/DateInput';
@@ -389,7 +391,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
   const [sort, setSort] = useState('Lần khám gần nhất');
   const [confirmExport, setConfirmExport] = useState(false);
   const [page, setPage] = useState(1);
-  const pageSize = 4;
+  const pageSize = useDynamicPageSize(5);
 
   const selectedPatient = patients.find((patient) => patient.id === selectedId) ?? null;
   const filteredPatients = patients
@@ -403,9 +405,6 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
 
   const totalPages = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
   const pagedPatients = filteredPatients.slice((page - 1) * pageSize, page * pageSize);
-  const pageStart = filteredPatients.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const pageEnd = Math.min(page * pageSize, filteredPatients.length);
-
   useEffect(() => {
     if (page > totalPages) {
       setPage(totalPages);
@@ -487,6 +486,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
         <div>
           <ResponsiveTable
             columns={['Mã BN', 'Họ và Tên', 'Thông tin chung', 'Lần khám gần nhất', 'Chi tiết']}
+            colWidths={['100px', '180px', '220px', undefined, '100px']}
             rows={pagedPatients.map((patient) => [
               patient.id,
               <b>{patient.name}</b>,
@@ -507,43 +507,7 @@ export default function PatientRecordsManagement({ onNotify }: { onNotify?: (mes
           />
           {filteredPatients.length === 0 ? <div className="px-6 py-14 text-center text-sm font-semibold text-slate-400">Không tìm thấy hồ sơ phù hợp.</div> : null}
         </div>
-        <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-semibold text-slate-500">
-            Hiển thị {pageStart} - {pageEnd} trên tổng số {filteredPatients.length} hồ sơ
-          </p>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              disabled={page === 1}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Trang trước"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-              <button
-                key={pageNumber}
-                type="button"
-                onClick={() => setPage(pageNumber)}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-bold transition ${
-                  page === pageNumber ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
-                }`}
-              >
-                {pageNumber}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-              disabled={page === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Trang sau"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
+        <SharedPagination page={page} totalPages={totalPages} total={filteredPatients.length} pageSize={pageSize} unit="hồ sơ" onChange={setPage} />
       </section>
       {confirmExport ? (
         <ConfirmDialog

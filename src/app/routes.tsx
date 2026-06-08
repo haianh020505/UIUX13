@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthApp from '../pages/auth/AuthApp';
 
 const DoctorDashboard = lazy(() => import('../pages/doctor/DoctorDashboard'));
-const ExpertDashboard = lazy(() => import('../pages/expert/ExpertDashboard'));
 const ManagerApp = lazy(() => import('../pages/manager/ManagerApp'));
 const PatientDashboard = lazy(() => import('../pages/patient/PatientDashboard'));
 
@@ -15,7 +14,7 @@ export default function AppRoutes() {
           <Route path="/" element={<AuthApp />} />
           <Route path="/patient-dashboard" element={<PatientDashboard />} />
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-          <Route path="/expert-dashboard" element={<ExpertDashboard />} />
+          <Route path="/doctor/prescription" element={<DoctorDashboard />} />
           <Route path="/admin-dashboard" element={<ManagerApp />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

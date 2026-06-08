@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, MapPin, Star, User } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, MapPin, Star, User } from 'lucide-react';
 import { specialtyOptions, doctorOptions, doctorSchedules } from './data';
 import type { AppointmentData, SpecialtyOption, TimeSlot, BookingContext } from './types';
 import { MedicalSpecialtyIcon } from './MedicalSpecialtyIcon';
@@ -83,18 +83,13 @@ export default function PatientBooking({
     }
   };
 
-  const goNext = () => {
-    if (step < 3 && canProceed()) setStep((step + 1) as WizardStep);
-  };
-
   const goPrev = () => {
     if (step > 1) {
-      if (step === (context.startStep ?? 1)) {
-        onBack();
-        return;
-      }
       setStep((step - 1) as WizardStep);
+      return;
     }
+
+    onBack();
   };
 
   const handleConfirm = () => {
@@ -120,7 +115,7 @@ export default function PatientBooking({
     setSelectedDoctorId(doctorId);
     setSelectedSlot(slot);
     setSelectedDate(dateValue);
-    setStep(3); // Auto advance to step 3
+    setStep(3);
   };
 
   /* ── Card date change handler (horizontal scroller) ── */
@@ -140,14 +135,14 @@ export default function PatientBooking({
     setSelectedSlot(null);
     setSelectedDate('');
     setCardDates(getInitialCardDates());
-    setStep(2); // Auto advance to step 2
+    setStep(2);
   };
 
   return (
     <div>
       {/* ── Wizard Header ── */}
       <div className="wizard-header">
-        <button type="button" className="btn-ghost" onClick={onBack}>
+        <button type="button" className="btn-ghost" onClick={goPrev}>
           <ArrowLeft size={16} />
           Quay lại
         </button>
@@ -157,7 +152,7 @@ export default function PatientBooking({
       {/* ── Reschedule Banner ── */}
       {context.isReschedule && context.fromAppointment ? (
         <div className="reschedule-banner" style={{ marginTop: 'var(--spacing-md)' }}>
-          <span>⚠️</span>
+          <AlertTriangle size={16} />
           <span>
             Bạn đang dời lịch hẹn cũ với <strong>{context.fromAppointment.doctor}</strong>.
             Lịch cũ sẽ bị hủy sau khi bạn xác nhận lịch mới.
@@ -252,9 +247,6 @@ export default function PatientBooking({
                     </div>
                   </div>
                 </div>
-
-                {/* ── Divider ── */}
-                <div className="doctor-card__divider" />
 
                 {/* ── Panel Right ── */}
                 <div className="doctor-card__right">
@@ -429,27 +421,10 @@ export default function PatientBooking({
       ) : null}
 
       {/* ── Wizard Footer ── */}
-      <div className="wizard-footer">
-        <div>
-          {step > 1 && step > (context.startStep ?? 1) ? (
-            <button type="button" className="appt-btn-secondary" onClick={goPrev}>
-              <ArrowLeft size={14} />
-              Quay lại
-            </button>
-          ) : null}
-        </div>
-        <div>
-          {step < 3 ? (
-            <button
-              type="button"
-              className="appt-btn-primary"
-              disabled={!canProceed()}
-              onClick={goNext}
-            >
-              Tiếp theo
-              <ArrowRight size={14} />
-            </button>
-          ) : (
+      {step === 3 ? (
+        <div className="wizard-footer">
+          <div />
+          <div>
             <button
               type="button"
               className="appt-btn-primary"
@@ -468,9 +443,9 @@ export default function PatientBooking({
                 </>
               )}
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

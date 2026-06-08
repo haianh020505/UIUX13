@@ -3,6 +3,8 @@ import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'reac
 import DateInput from './components/DateInput';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
+import SharedPagination from '../../components/common/Pagination';
+import useDynamicPageSize from '../../components/common/useDynamicPageSize';
 
 type AppointmentStatus = 'pending' | 'waiting' | 'examining' | 'cancelled';
 type ViewMode = 'day' | 'week' | 'month';
@@ -358,7 +360,7 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [anchorDate, setAnchorDate] = useState(() => parseDisplayDate('04/06/2026'));
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = useDynamicPageSize(5);
 
   const selectedAppointment = appointments.find((appointment) => appointment.id === selectedId) ?? null;
   const detailAppointment = appointments.find((appointment) => appointment.id === detailModalId) ?? null;
@@ -417,15 +419,10 @@ export default function AppointmentManagement({ onNotify }: { onNotify?: (messag
           anchorDate={anchorDate}
           onDateSelect={setAnchorDate}
           onMoveDate={(direction) => setAnchorDate((current) => moveDate(current, viewMode, direction))}
-          hasActiveFilters={specialtyFilter !== specialties[0] || statusFilter !== 'all'}
-          onClearFilters={() => {
-            setSpecialtyFilter(specialties[0]);
-            setStatusFilter('all');
-          }}
         />
         <StatusFilterTabs active={statusFilter} counts={statusCounts} onChange={setStatusFilter} />
         <AppointmentTable groups={groupedAppointments} onView={setDetailModalId} onConfirm={(id) => setPendingAction({ id, action: 'confirm' })} onReject={(id) => setPendingAction({ id, action: 'reject' })} />
-        {totalPages > 1 ? <Pagination currentPage={page} totalPages={totalPages} totalItems={filteredAppointments.length} pageSize={pageSize} onChange={setPage} /> : null}
+        <SharedPagination page={page} totalPages={totalPages} total={filteredAppointments.length} pageSize={pageSize} unit="lịch hẹn" onChange={setPage} />
       </section>
       {detailAppointment ? (
         <AppointmentDetailsModal
@@ -464,8 +461,6 @@ function AppointmentToolbar({
   anchorDate,
   onDateSelect,
   onMoveDate,
-  hasActiveFilters,
-  onClearFilters,
 }: {
   specialtyFilter: string;
   onSpecialtyChange: (value: string) => void;
@@ -474,8 +469,6 @@ function AppointmentToolbar({
   anchorDate: Date;
   onDateSelect: (value: Date) => void;
   onMoveDate: (direction: -1 | 1) => void;
-  hasActiveFilters: boolean;
-  onClearFilters: () => void;
 }) {
   return (
     <div className="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-center xl:justify-between">
@@ -483,16 +476,6 @@ function AppointmentToolbar({
         <div className="w-full max-w-sm">
           <SelectMenu value={specialtyFilter} options={[...specialties, ...Object.values(doctorsBySpecialty).flat()]} onChange={onSpecialtyChange} />
         </div>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={onClearFilters}
-            className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 active:scale-[0.98] cursor-pointer"
-          >
-            <X size={14} />
-            Xóa bộ lọc
-          </button>
-        )}
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <DateNavigator anchorDate={anchorDate} viewMode={viewMode} onDateSelect={onDateSelect} onMoveDate={onMoveDate} />
@@ -623,7 +606,7 @@ function AppointmentTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full table-fixed text-left text-sm">
+      <table className="data-table min-w-full text-left text-sm">
         <colgroup>
           <col style={{ width: '120px' }} />
           <col style={{ width: '220px' }} />

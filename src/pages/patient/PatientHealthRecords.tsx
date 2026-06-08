@@ -1,5 +1,15 @@
 import { useState, useMemo, useCallback } from 'react';
-import { TrendingUp, Plus, Edit3, Trash2, X, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import { TrendingUp, Plus, Pencil, Trash2, X, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import type {
   AllergyItem,
   AllergyFormData,
@@ -236,7 +246,7 @@ function HealthMetricsSection({
           Chỉ số cơ thể
         </h2>
         <button type="button" className="hr-btn-primary hr-btn-sm" onClick={onOpenUpdateMetrics}>
-          <Edit3 size={14} /> Cập nhật
+          <Pencil size={14} /> Cập nhật
         </button>
       </div>
 
@@ -290,7 +300,7 @@ function HealthMetricsSection({
           if (!entry) {
             return (
               <div key={cfg.key} className="hr-metric-card hr-metric-card--empty">
-                <div className="hr-metric-card__label">{cfg.icon} {cfg.label}</div>
+                <div className="hr-metric-card__label">{cfg.label}</div>
                 <div className="hr-metric-card__empty-text">Chưa có dữ liệu</div>
                 <button type="button" className="hr-metric-card__empty-cta" onClick={onOpenUpdateMetrics}>
                   + Cập nhật ngay
@@ -302,8 +312,8 @@ function HealthMetricsSection({
           return (
             <div key={cfg.key} className="hr-metric-card">
               <div className="hr-metric-card__header">
-                <span className="hr-metric-card__label">{cfg.icon} {cfg.label}</span>
-                {outdated ? <span className="hr-outdated-badge">⚠️ Chưa cập nhật</span> : null}
+                <span className="hr-metric-card__label">{cfg.label}</span>
+                {outdated ? <span className="hr-outdated-badge"><AlertTriangle size={12} /> Chưa cập nhật</span> : null}
               </div>
               <div>
                 <span className="hr-metric-card__value">{entry.value}</span>
@@ -326,7 +336,7 @@ function HealthMetricsSection({
               bmiInfo.category === 'obese' ? 'var(--color-danger-light)' : 'var(--color-warning-light)'
           } : { background: 'var(--color-bg-subtle)' }}
         >
-          <span className="hr-metric-card__label">📊 BMI</span>
+          <span className="hr-metric-card__label">BMI</span>
           {vitals.bmi ? (
             <>
               <span className="hr-bmi-card__value" style={{
@@ -441,7 +451,7 @@ function AllergyProfileSection({
           {allergies.map(item => {
             const sevCfg = getSeverityConfig(item.severity);
             const srcCfg = getSourceLabel(item.source);
-            // 🚨 CRITICAL: Only self-reported allergies can be edited/deleted by patient
+            // Only self-reported allergies can be edited/deleted by patient.
             const isSelfReported = item.source === 'self-reported';
 
             return (
@@ -459,7 +469,7 @@ function AllergyProfileSection({
                   {isSelfReported ? (
                     <div className="hr-allergy-item__actions">
                       <button type="button" className="hr-btn-ghost" onClick={() => onEdit(item)} title="Sửa">
-                        <Edit3 size={13} />
+                        <Pencil size={13} />
                       </button>
                       <button type="button" className="hr-btn-ghost hr-btn-ghost--danger" onClick={() => onDelete(item)} title="Xóa">
                         <Trash2 size={13} />
@@ -483,7 +493,7 @@ function AllergyProfileSection({
         </div>
       ) : (
         <div className="hr-empty-state">
-          <div className="hr-empty-state__icon">🛡️</div>
+          <div className="hr-empty-state__icon"><ShieldCheck size={28} /></div>
           <div className="hr-empty-state__title">Chưa có thông tin dị ứng</div>
           <div className="hr-empty-state__desc">Hãy thêm để bác sĩ có thể kê đơn an toàn hơn.</div>
           <button type="button" className="hr-btn-primary hr-btn-sm" onClick={onAdd}>
@@ -510,66 +520,164 @@ function MetricHistoryModal({
   const cfg = metricConfigs.find(c => c.key === metricKey);
   if (!cfg) return null;
 
-  // Simple SVG sparkline
-  const chartPoints = entries.length > 1 ? (() => {
-    const values = [...entries].reverse().map(e => parseFloat(e.value.split('/')[0]) || 0);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-    const w = 100;
-    const h = 80;
-    const padding = 10;
-    return values.map((v, i) => ({
-      x: padding + (i / (values.length - 1)) * (w - 2 * padding),
-      y: padding + (1 - (v - min) / range) * (h - 2 * padding),
+  const values = entries.map(e => parseFloat(e.value.split('/')[0]) || 0);
+  const latest = entries[0] ?? null;
+  const previous = entries[1] ?? null;
+  const delta = latest && previous
+    ? Math.round((parseFloat(latest.value) - parseFloat(previous.value)) * 10) / 10
+    : 0;
+  const sortedValues = values.length > 0 ? [...values].sort((a, b) => a - b) : [];
+  const minValue = sortedValues[0] ?? 0;
+  const maxValue = sortedValues[sortedValues.length - 1] ?? 0;
+  const chartData = [...entries]
+    .reverse()
+    .map(entry => ({
+      date: entry.date,
+      value: parseFloat(entry.value.split('/')[0]) || 0,
     }));
-  })() : null;
+  const isFlat = values.length > 1 && minValue === maxValue;
+  const yDomain: [number, number] | ['auto', 'auto'] = isFlat
+    ? [minValue - 5, maxValue + 5]
+    : ['auto', 'auto'];
+  const gradientId = `metricChartGradient-${metricKey}`;
 
   return (
     <div className="hr-modal-overlay" onClick={onClose}>
       <div className="hr-modal hr-modal--lg" onClick={e => e.stopPropagation()}>
         <div className="hr-modal__header">
-          <h3 className="hr-modal__title">{cfg.icon} Lịch sử {cfg.label}</h3>
+          <h3 className="hr-modal__title">Lịch sử {cfg.label}</h3>
           <button type="button" className="hr-modal__close" onClick={onClose}>
             <X size={16} />
           </button>
         </div>
         <div className="hr-modal__body">
-          {/* Sparkline Chart */}
-          {chartPoints && chartPoints.length > 1 ? (
-            <div className="hr-sparkline">
-              <svg viewBox="0 0 100 80" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.02" />
-                  </linearGradient>
-                </defs>
-                {/* Fill area */}
-                <path
-                  d={`M ${chartPoints[0].x} ${chartPoints[0].y} ${chartPoints.map(p => `L ${p.x} ${p.y}`).join(' ')} L ${chartPoints[chartPoints.length - 1].x} 75 L ${chartPoints[0].x} 75 Z`}
-                  fill="url(#sparkFill)"
-                />
-                {/* Line */}
-                <polyline
-                  points={chartPoints.map(p => `${p.x},${p.y}`).join(' ')}
-                  fill="none"
-                  stroke="var(--color-primary)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {/* Dots */}
-                {chartPoints.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r="3" fill="var(--color-bg-surface)" stroke="var(--color-primary)" strokeWidth="2" />
-                ))}
-              </svg>
+          {entries.length > 0 ? (
+            <div className="hr-history-summary">
+              <div className="hr-history-summary__item">
+                <span className="hr-history-summary__label">Mới nhất</span>
+                <span className="hr-history-summary__value">{latest?.value} {cfg.unit}</span>
+                <span className="hr-history-summary__hint">{latest?.date}</span>
+              </div>
+              <div className="hr-history-summary__item">
+                <span className="hr-history-summary__label">Thay đổi</span>
+                <span className={`hr-history-summary__value ${delta > 0 ? 'hr-history-summary__value--up' : delta < 0 ? 'hr-history-summary__value--down' : ''}`}>
+                  {delta > 0 ? '+' : ''}{delta} {cfg.unit}
+                </span>
+                <span className="hr-history-summary__hint">so với lần trước</span>
+              </div>
+              <div className="hr-history-summary__item">
+                <span className="hr-history-summary__label">Khoảng ghi nhận</span>
+                <span className="hr-history-summary__value">{minValue}-{maxValue} {cfg.unit}</span>
+                <span className="hr-history-summary__hint">{entries.length} lần cập nhật</span>
+              </div>
             </div>
+          ) : null}
+
+          {/* Trend Chart */}
+          {entries.length === 1 ? (
+            <div className="chart-single-point">
+              <div className="chart-single-point__value">
+                {entries[0]?.value} {cfg.unit}
+              </div>
+              <p className="chart-single-point__note">
+                Cần ít nhất 2 lần ghi nhận để hiển thị biểu đồ xu hướng.
+              </p>
+            </div>
+          ) : chartData.length > 1 ? (
+            <>
+              <div className="hr-sparkline chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={chartData}
+                    margin={{ top: 10, right: 16, left: 8, bottom: 8 }}
+                  >
+                    <defs>
+                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{
+                        fontSize: 11,
+                        fill: 'var(--color-text-secondary)',
+                      }}
+                      tickFormatter={formatShortChartDate}
+                      tickLine={false}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                    />
+                    <YAxis
+                      tick={{
+                        fontSize: 11,
+                        fill: 'var(--color-text-secondary)',
+                      }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={52}
+                      domain={yDomain}
+                      tickFormatter={(value) => `${value} ${cfg.unit}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'var(--color-bg-surface)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: 'var(--font-size-xs)',
+                        boxShadow: 'var(--shadow-md)',
+                      }}
+                      formatter={(value) => [`${value} ${cfg.unit}`, 'Giá trị']}
+                      labelFormatter={(label) => `Ngày ${formatFullChartDate(String(label))}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="none"
+                      fill={`url(#${gradientId})`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="var(--color-primary)"
+                      strokeWidth={2.5}
+                      dot={{
+                        r: 5,
+                        fill: 'var(--color-primary)',
+                        strokeWidth: 2,
+                        stroke: 'var(--color-bg-surface)',
+                      }}
+                      activeDot={{
+                        r: 7,
+                        fill: 'var(--color-primary)',
+                        stroke: 'var(--color-bg-surface)',
+                        strokeWidth: 2,
+                      }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+              {isFlat ? (
+                <p className="chart-flat-note">
+                  Chỉ số ổn định, không có thay đổi trong kỳ này.
+                </p>
+              ) : null}
+            </>
           ) : null}
 
           {/* History Table */}
           {entries.length > 0 ? (
-            <table className="hr-history-table">
+            <table className="data-table hr-history-table">
+              <colgroup>
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '120px' }} />
+                <col />
+                <col style={{ width: '48px' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Ngày</th>
@@ -606,7 +714,7 @@ function MetricHistoryModal({
             </table>
           ) : (
             <div className="hr-empty-state" style={{ padding: 'var(--spacing-lg)' }}>
-              <div className="hr-empty-state__icon">📊</div>
+              <div className="hr-empty-state__icon"><TrendingUp size={28} /></div>
               <div className="hr-empty-state__title">Chưa có lịch sử</div>
               <div className="hr-empty-state__desc">Cập nhật chỉ số để bắt đầu theo dõi xu hướng.</div>
             </div>
@@ -620,6 +728,22 @@ function MetricHistoryModal({
       </div>
     </div>
   );
+}
+
+function formatShortChartDate(date: string) {
+  const parsed = parseMetricDate(date);
+  return parsed ? `${parsed.day}/${parsed.month}` : date;
+}
+
+function formatFullChartDate(date: string) {
+  const parsed = parseMetricDate(date);
+  return parsed ? `${parsed.day}/${parsed.month}/${parsed.year}` : date;
+}
+
+function parseMetricDate(date: string) {
+  const [day, month, year] = date.split('/').map(Number);
+  if (!day || !month || !year) return null;
+  return { day, month, year };
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -673,7 +797,7 @@ function AllergyFormModal({
       <div className="hr-modal" onClick={e => e.stopPropagation()}>
         <div className="hr-modal__header">
           <h3 className="hr-modal__title">
-            {mode === 'add' ? '➕ Thêm thông tin dị ứng' : '✏️ Sửa thông tin dị ứng'}
+            {mode === 'add' ? 'Thêm thông tin dị ứng' : 'Sửa thông tin dị ứng'}
           </h3>
           <button type="button" className="hr-modal__close" onClick={onClose}><X size={16} /></button>
         </div>
@@ -821,7 +945,7 @@ function DeleteAllergyConfirm({
     <div className="hr-modal-overlay" onClick={onCancel}>
       <div className="hr-modal hr-confirm-dialog" onClick={e => e.stopPropagation()}>
         <div className="hr-modal__body" style={{ padding: 'var(--spacing-xl)' }}>
-          <div className="hr-confirm-dialog__icon hr-confirm-dialog__icon--danger">🗑️</div>
+          <div className="hr-confirm-dialog__icon hr-confirm-dialog__icon--danger"><Trash2 size={24} /></div>
           <div className="hr-confirm-dialog__text">
             <div className="hr-confirm-dialog__title">Xóa dị ứng "{item.name}"?</div>
             <div className="hr-confirm-dialog__desc">
@@ -829,7 +953,7 @@ function DeleteAllergyConfirm({
             </div>
             {isDoctorConfirmed ? (
               <div className="hr-confirm-dialog__desc--warning">
-                ⚠️ Dị ứng này đã được <strong>bác sĩ xác nhận</strong>. Thay đổi này sẽ ảnh hưởng đến cảnh báo kê đơn.
+                <AlertTriangle size={14} /> Dị ứng này đã được <strong>bác sĩ xác nhận</strong>. Thay đổi này sẽ ảnh hưởng đến cảnh báo kê đơn.
               </div>
             ) : null}
           </div>
@@ -872,7 +996,7 @@ function UpdateMetricsModal({
     <div className="hr-modal-overlay" onClick={onClose}>
       <div className="hr-modal" onClick={e => e.stopPropagation()}>
         <div className="hr-modal__header">
-          <h3 className="hr-modal__title">📝 Cập nhật chỉ số cơ thể</h3>
+          <h3 className="hr-modal__title">Cập nhật chỉ số cơ thể</h3>
           <button type="button" className="hr-modal__close" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="hr-modal__body">

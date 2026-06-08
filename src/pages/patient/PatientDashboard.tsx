@@ -248,7 +248,7 @@ export default function PatientDashboard() {
         {page === 'consultation' ? (
           <PatientConsultation onNavigateToBooking={handleNavigateToBooking} />
         ) : (
-          <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
+          <section className="page-content">
             {page === 'dashboard' ? (
               <PatientDashboardHome
                 onNavigate={openPage}

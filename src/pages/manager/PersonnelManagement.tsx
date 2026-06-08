@@ -1,8 +1,10 @@
 import { useState, FormEvent, useEffect } from 'react';
-import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { mockStaff } from '../../data/clinicMock';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
+import SharedPagination from '../../components/common/Pagination';
+import useDynamicPageSize from '../../components/common/useDynamicPageSize';
 
 type StaffRole = 'Bác sĩ' | 'Điều dưỡng' | 'Kỹ thuật viên' | 'Lễ tân';
 
@@ -67,8 +69,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
   const [editingStaff, setEditingStaff] = useState<Staff | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Staff | null>(null);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
-  const hasActiveFilters = !!(query.trim() || roleFilter);
+  const pageSize = useDynamicPageSize(5);
   // Search + role filter
   const filteredStaff = staff.filter((item) => {
     const keyword = query.trim().toLowerCase();
@@ -81,8 +82,6 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
 
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
   const pagedStaff = filteredStaff.slice((page - 1) * pageSize, page * pageSize);
-  const pageStart = filteredStaff.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const pageEnd = Math.min(page * pageSize, filteredStaff.length);
 
   const handleSave = (payload: Staff) => {
     if (editingStaff === 'new') {
@@ -140,20 +139,11 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
             <option value="Kỹ thuật viên">Kỹ thuật viên</option>
             <option value="Lễ tân">Lễ tân</option>
           </select>
-          {hasActiveFilters ? (
-            <button
-              type="button"
-              className="filter-clear-btn"
-              onClick={() => { setQuery(''); setRoleFilter(''); setPage(1); }}
-            >
-              <X size={14} /> Xóa bộ lọc
-            </button>
-          ) : null}
         </div>
 
         {/* Data Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full table-fixed text-left text-sm">
+          <table className="data-table min-w-full text-left text-sm">
             <colgroup>
               <col style={{width:'100px'}} />
               <col style={{width:'180px'}} />
@@ -223,46 +213,7 @@ export default function PersonnelManagement({ onNotify }: { onNotify?: (message:
           </table>
         </div>
 
-        {/* Pagination Component */}
-        {totalPages > 1 ? (
-        <div className="flex items-center justify-between border-t border-slate-100 p-4">
-          <p className="text-sm font-semibold text-slate-500">
-            Hiển thị {pageStart}-{pageEnd} trên tổng số {totalStaffCount}
-          </p>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Trang trước"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                type="button"
-                onClick={() => setPage(pageNum)}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-bold transition ${
-                  page === pageNum ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Trang sau"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-        ) : null}
+        <SharedPagination page={page} totalPages={totalPages} total={totalStaffCount} pageSize={pageSize} unit="nhân sự" onChange={setPage} />
       </section>
 
       {/* CRUD Form Modal */}

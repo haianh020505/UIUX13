@@ -1,5 +1,6 @@
-import { CalendarDays, CircleUserRound, DoorOpen, LogOut, Menu, Stethoscope } from 'lucide-react';
+import { CircleUserRound, LogOut, Menu } from 'lucide-react';
 import NotificationBell, { type NotificationItem } from '../../../components/common/NotificationBell';
+import StatusBar from '../../../components/common/StatusBar';
 
 const doctorNotifications: NotificationItem[] = [
   {
@@ -70,27 +71,7 @@ export default function DoctorHeader({
         <Menu size={18} />
       </button>
       <div className="hidden min-w-0 items-center gap-2.5 lg:flex">
-        <div className="flex items-center gap-2.5 rounded-lg border border-sky-100 bg-sky-50 px-3 py-1.5">
-          <Stethoscope size={16} className="text-brand" />
-          <div>
-            <p className="text-xs font-extrabold uppercase text-slate-400">Chuyên khoa</p>
-            <p className="text-xs font-semibold text-slate-700">Khoa Tai Mũi Họng</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-          <DoorOpen size={16} className="text-brand" />
-          <div>
-            <p className="text-xs font-extrabold uppercase text-slate-400">Phòng khám</p>
-            <p className="text-xs font-semibold text-slate-700">Phòng 203</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-          <CalendarDays size={16} className="text-brand" />
-          <div>
-            <p className="text-xs font-extrabold uppercase text-slate-400">Hôm nay</p>
-            <p className="text-xs font-semibold capitalize text-slate-700">{today}</p>
-          </div>
-        </div>
+        <StatusBar isOpen openTime="08:00" closeTime="17:30" currentDate={today} detail="Khoa Tai Mũi Họng · Phòng 203" />
       </div>
       <div className="ml-auto flex items-center gap-2.5">
         <NotificationBell notifications={doctorNotifications} onNotificationClick={onNotificationClick} />

@@ -1,7 +1,9 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import type { Appointment } from '../types';
-import { getPatient } from '../data';
+import { getPatient, hasRecordedAllergy } from '../data';
+import SharedPagination from '../../../components/common/Pagination';
+import useDynamicPageSize from '../../../components/common/useDynamicPageSize';
 
 type CalendarView = 'day' | 'week' | 'month';
 type StatusFilter = 'Tất cả' | 'Đã khám' | 'Đang chờ' | 'Đang khám';
@@ -23,6 +25,7 @@ const monthAppointmentDays = [1, 4, 4, 5, 7, 7, 8, 10, 11, 12, 15, 15, 15, 18, 2
 export default function AppointmentsView({
   appointments,
   onCall,
+  onOpenExam,
   onOpenRecord,
 }: {
   appointments: Appointment[];
@@ -38,11 +41,15 @@ export default function AppointmentsView({
   const [selectedAppointment, setSelectedAppointment] = useState<SelectedAppointment | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [dayPage, setDayPage] = useState(1);
-  const dayPageSize = 8;
+  const dayPageSize = useDynamicPageSize(8);
   const pickerRef = useRef<HTMLDivElement>(null);
   const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
   const normalizedAppointments = useMemo(() => appointments.map(normalizeAppointment), [appointments]);
   const filteredAppointments = useMemo(() => filterAppointments(normalizedAppointments, statusFilter), [normalizedAppointments, statusFilter]);
+  const nextAppointmentId = useMemo(
+    () => filteredAppointments.find((appointment) => appointment.status === 'Đang chờ')?.id ?? null,
+    [filteredAppointments],
+  );
   const totalDayPages = Math.max(1, Math.ceil(filteredAppointments.length / dayPageSize));
   const pagedDayAppointments = useMemo(
     () => filteredAppointments.slice((dayPage - 1) * dayPageSize, dayPage * dayPageSize),
@@ -130,7 +137,12 @@ export default function AppointmentsView({
     if (!selectedAppointment) return;
     onCall(selectedAppointment.appointment);
     setIsDrawerOpen(false);
-    onOpenRecord(selectedAppointment.appointment.patientCode);
+  };
+
+  const enterSelectedAppointment = () => {
+    if (!selectedAppointment) return;
+    setIsDrawerOpen(false);
+    onOpenExam(selectedAppointment.appointment);
   };
 
   const isSplitLayout = calendarView !== 'week' && isDrawerOpen && selectedAppointment;
@@ -140,7 +152,7 @@ export default function AppointmentsView({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div ref={pickerRef} className="relative flex h-12 w-full max-w-sm items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3">
           <button type="button" onClick={() => moveDate(-1)} className="flex h-8 w-8 items-center justify-center rounded-md text-lg font-semibold text-slate-500 transition hover:bg-white hover:text-brand" aria-label="Lùi lịch">
-            &lt;
+            <ChevronLeft size={18} />
           </button>
           <button
             type="button"
@@ -153,7 +165,7 @@ export default function AppointmentsView({
             {formatToolbarTitle(selectedDate, calendarView)}
           </button>
           <button type="button" onClick={() => moveDate(1)} className="flex h-8 w-8 items-center justify-center rounded-md text-lg font-semibold text-slate-500 transition hover:bg-white hover:text-brand" aria-label="Tiến lịch">
-            &gt;
+            <ChevronRight size={18} />
           </button>
           {datePickerOpen ? (
             <MiniDatePicker month={pickerMonth} selectedDate={selectedDate} onMonthChange={setPickerMonth} onSelectDate={selectDate} />
@@ -193,17 +205,21 @@ export default function AppointmentsView({
       </div>
 
       <div className={isSplitLayout ? "mt-5 min-h-0 flex-1 flex flex-row w-full h-full overflow-hidden items-start gap-4" : "mt-5 min-h-0 flex-1 w-full h-full overflow-hidden"}>
-        <div className={isSplitLayout ? "flex-1 h-full overflow-x-auto overflow-y-auto custom-scrollbar" : "w-full h-full overflow-x-auto overflow-y-auto custom-scrollbar"}>
+        <div className={isSplitLayout ? "max-h-[calc(100dvh-15.5rem)] min-h-[360px] flex-1 overflow-x-auto overflow-y-scroll pr-1 custom-scrollbar [scrollbar-gutter:stable]" : "w-full h-full overflow-x-auto overflow-y-auto custom-scrollbar"}>
           {calendarView === 'day' ? (
             <div className="space-y-4">
-              <DayView appointments={pagedDayAppointments} selectedDate={selectedDate} onSelectAppointment={openAppointmentDrawer} />
-              <Pagination
-                currentPage={dayPage}
-                totalPages={totalDayPages}
-                totalItems={filteredAppointments.length}
-                pageSize={dayPageSize}
-                onChange={setDayPage}
+              <DayView
+                appointments={pagedDayAppointments}
+                selectedDate={selectedDate}
+                nextAppointmentId={nextAppointmentId}
+                onCall={onCall}
+                onOpenExam={onOpenExam}
+                onOpenRecord={onOpenRecord}
+                onSelectAppointment={openAppointmentDrawer}
               />
+              {totalDayPages > 1 ? (
+                <SharedPagination page={dayPage} totalPages={totalDayPages} total={filteredAppointments.length} pageSize={dayPageSize} unit="lịch khám" onChange={setDayPage} />
+              ) : null}
             </div>
           ) : null}
           {calendarView === 'week' ? <WeekView appointments={filteredAppointments} weekDays={weekDays} selectedDate={selectedDate} onSelectAppointment={openAppointmentDrawer} /> : null}
@@ -215,6 +231,7 @@ export default function AppointmentsView({
             onClose={closeDrawer}
             onOpenRecord={openSelectedRecord}
             onStartAppointment={startSelectedAppointment}
+            onEnterAppointment={enterSelectedAppointment}
           />
         ) : null}
         {!isSplitLayout && isDrawerOpen && selectedAppointment ? (
@@ -223,6 +240,7 @@ export default function AppointmentsView({
             onClose={closeDrawer}
             onOpenRecord={openSelectedRecord}
             onStartAppointment={startSelectedAppointment}
+            onEnterAppointment={enterSelectedAppointment}
           />
         ) : null}
       </div>
@@ -233,35 +251,112 @@ export default function AppointmentsView({
 function DayView({
   appointments,
   selectedDate,
+  nextAppointmentId,
+  onCall,
+  onOpenExam,
+  onOpenRecord,
   onSelectAppointment,
 }: {
   appointments: Appointment[];
   selectedDate: Date;
+  nextAppointmentId: string | null;
+  onCall: (appointment: Appointment) => void;
+  onOpenExam: (appointment: Appointment) => void;
+  onOpenRecord: (code: string) => void;
   onSelectAppointment: (appointment: Appointment, date?: Date) => void;
 }) {
   return (
-    <div className="space-y-3">
-      {appointments.map((appointment) => {
-        const patient = getPatient(appointment.patientCode);
-        const tone = getAppointmentBlockTone(appointment.status);
+    <div className="schedule-table-wrapper">
+      <table className="data-table schedule-table">
+        <colgroup>
+          <col style={{ width: '130px' }} />
+          <col style={{ width: '180px' }} />
+          <col />
+          <col style={{ width: '130px' }} />
+          <col style={{ width: '160px' }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Khung giờ</th>
+            <th>Bệnh nhân</th>
+            <th>Tóm tắt triệu chứng</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {appointments.map((appointment) => {
+            const patient = getPatient(appointment.patientCode);
+            const hasAllergy = hasRecordedAllergy(patient.allergy);
+            const isNext = appointment.id === nextAppointmentId;
+            const isDone = appointment.status === 'Đã khám';
+            const statusClass =
+              appointment.status === 'Đang chờ'
+                ? 'status-badge--waiting'
+                : appointment.status === 'Đang khám'
+                  ? 'status-badge--examining'
+                  : 'status-badge--done';
 
-        return (
-          <button
-            key={appointment.id}
-            type="button"
-            onClick={() => onSelectAppointment(appointment, selectedDate)}
-            className={`block w-full rounded-md border p-4 text-left shadow-sm transition hover:shadow-md ${tone}`}
-          >
-            <p className="text-sm font-extrabold text-slate-400">
-              {getShiftLabel(appointment.time)} · {appointment.time}
-            </p>
-            <p className="mt-2 text-base font-extrabold">{patient.name}</p>
-            <div className="mt-2">
-              <StatusBadge status={appointment.status} />
-            </div>
-          </button>
-        );
-      })}
+            const openRecord = (event: ReactMouseEvent<HTMLButtonElement>) => {
+              event.stopPropagation();
+              onOpenRecord(patient.code);
+            };
+
+            const callPatient = (event: ReactMouseEvent<HTMLButtonElement>) => {
+              event.stopPropagation();
+              onCall(appointment);
+            };
+
+            const enterExam = (event: ReactMouseEvent<HTMLButtonElement>) => {
+              event.stopPropagation();
+              onOpenExam(appointment);
+            };
+
+            return (
+              <tr
+                key={appointment.id}
+                className={`schedule-row ${isNext ? 'schedule-row--next' : ''} ${isDone ? 'schedule-row--done' : ''}`}
+                onClick={() => onSelectAppointment(appointment, selectedDate)}
+              >
+                <td className="schedule-row__time">
+                  <span className="time-session">{getShiftLabel(appointment.time)}</span>
+                  <span className="time-range">{appointment.time}</span>
+                </td>
+                <td className="schedule-row__patient">
+                  <span className="patient-name">{patient.name}</span>
+                  <span className="patient-code">{patient.code}</span>
+                  {hasAllergy ? (
+                    <span className="allergy-badge">⚠ {patient.allergy}</span>
+                  ) : null}
+                </td>
+                <td className="schedule-row__symptom" title={appointment.summary}>
+                  {appointment.summary}
+                </td>
+                <td className="schedule-row__status">
+                  <span className={`status-badge ${statusClass}`}>
+                    {appointment.status}
+                  </span>
+                </td>
+                <td className="schedule-row__actions">
+                  {appointment.status === 'Đang chờ' ? (
+                    <button type="button" className="schedule-action-primary btn--sm" onClick={callPatient}>
+                      Gọi khám
+                    </button>
+                  ) : appointment.status === 'Đã khám' ? (
+                    <button type="button" className="schedule-action-secondary btn--sm" onClick={openRecord}>
+                      Xem hồ sơ
+                    </button>
+                  ) : (
+                    <button type="button" className="schedule-action-primary btn--sm" onClick={enterExam}>
+                      Vào khám
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -284,13 +379,13 @@ function WeekView({
   }));
 
   return (
-    <div className="min-w-[1000px] w-full overflow-hidden rounded-lg border border-slate-200">
-      <div className="grid min-w-[1000px] w-full grid-cols-7 pb-4">
+    <div className="week-calendar-wrapper rounded-lg border border-slate-200">
+      <div className="week-calendar pb-4">
         {columns.map((column, index) => {
           const today = isSameDay(column.date, selectedDate);
           const weekend = index >= 5;
           return (
-            <div key={column.date.toISOString()} className={`border-r border-slate-100 last:border-r-0 ${weekend ? 'bg-amber-50/20' : 'bg-white'}`}>
+            <div key={column.date.toISOString()} className={`week-day-column border-r border-slate-100 last:border-r-0 ${weekend ? 'bg-amber-50/20' : 'bg-white'}`}>
               <div
                 className={`flex flex-col items-center justify-center py-3 gap-1 ${
                   today
@@ -423,22 +518,24 @@ function AppointmentDrawer({
   onClose,
   onOpenRecord,
   onStartAppointment,
+  onEnterAppointment,
 }: {
   selectedAppointment: SelectedAppointment;
   onClose: () => void;
   onOpenRecord: () => void;
   onStartAppointment: () => void;
+  onEnterAppointment: () => void;
 }) {
   const { appointment, date } = selectedAppointment;
   const patient = getPatient(appointment.patientCode);
   const statusTone = getStatusTone(appointment.status);
   const completed = appointment.status === 'Đã khám';
   const waiting = appointment.status === 'Đang chờ';
-  const ctaLabel = waiting ? 'Gọi vào khám' : appointment.status === 'Đang khám' ? 'Tiếp tục khám' : 'Xem hồ sơ';
+  const ctaLabel = waiting ? 'Gọi khám' : appointment.status === 'Đang khám' ? 'Vào khám' : 'Xem hồ sơ';
   const ctaClass = completed
     ? 'h-11 w-full rounded-lg border border-slate-300 bg-white text-sm font-extrabold text-slate-600 shadow-sm transition hover:border-brand hover:text-brand'
     : 'h-11 w-full rounded-lg bg-brand text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1f7fb9]';
-  const ctaAction = waiting ? onStartAppointment : onOpenRecord;
+  const ctaAction = waiting ? onStartAppointment : appointment.status === 'Đang khám' ? onEnterAppointment : onOpenRecord;
 
   return (
     <aside
@@ -498,22 +595,24 @@ function AppointmentModal({
   onClose,
   onOpenRecord,
   onStartAppointment,
+  onEnterAppointment,
 }: {
   selectedAppointment: SelectedAppointment;
   onClose: () => void;
   onOpenRecord: () => void;
   onStartAppointment: () => void;
+  onEnterAppointment: () => void;
 }) {
   const { appointment, date } = selectedAppointment;
   const patient = getPatient(appointment.patientCode);
   const statusTone = getStatusTone(appointment.status);
   const completed = appointment.status === 'Đã khám';
   const waiting = appointment.status === 'Đang chờ';
-  const ctaLabel = waiting ? 'Gọi vào khám' : appointment.status === 'Đang khám' ? 'Tiếp tục khám' : 'Xem hồ sơ';
+  const ctaLabel = waiting ? 'Gọi khám' : appointment.status === 'Đang khám' ? 'Vào khám' : 'Xem hồ sơ';
   const ctaClass = completed
     ? 'h-11 w-full rounded-lg border border-slate-300 bg-white text-sm font-extrabold text-slate-600 shadow-sm transition hover:border-brand hover:text-brand'
     : 'h-11 w-full rounded-lg bg-brand text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1f7fb9]';
-  const ctaAction = waiting ? onStartAppointment : onOpenRecord;
+  const ctaAction = waiting ? onStartAppointment : appointment.status === 'Đang khám' ? onEnterAppointment : onOpenRecord;
 
   return (
     <div
@@ -593,11 +692,11 @@ function MiniDatePicker({
     <div className="absolute left-0 top-14 z-30 w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-xl">
       <div className="flex items-center justify-between">
         <button type="button" onClick={() => moveMonth(-1)} className="rounded-md border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-600 hover:border-brand hover:text-brand">
-          &lt;
+          <ChevronLeft size={16} />
         </button>
         <span className="text-sm font-bold text-slate-800">{formatMonthTitle(month)}</span>
         <button type="button" onClick={() => moveMonth(1)} className="rounded-md border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-600 hover:border-brand hover:text-brand">
-          &gt;
+          <ChevronRight size={16} />
         </button>
       </div>
       <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-400">

@@ -11,7 +11,15 @@ export default function LabResultsView({ onOpenRecord }: { onOpenRecord: (code: 
       </section>
       <section className="doctor-panel">
         <div className="waiting-table-scroll">
-          <table className="waiting-table">
+          <table className="data-table waiting-table">
+            <colgroup>
+              <col style={{ width: '180px' }} />
+              <col style={{ width: '120px' }} />
+              <col />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '130px' }} />
+              <col style={{ width: '120px' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Bệnh nhân</th>

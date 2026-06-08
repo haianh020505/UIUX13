@@ -3,9 +3,9 @@ import {
   AlertTriangle,
   Bot,
   CalendarDays,
-  Check,
   CheckCircle2,
   ChevronRight,
+  Info,
   MessageCircle,
   Phone,
   Plus,
@@ -24,7 +24,7 @@ import type { BookingContext } from './types';
 
 type UrgencyLevel = 'red' | 'yellow' | 'green' | 'pending';
 type MessageSender = 'ai' | 'patient' | 'doctor' | 'system';
-type FlowId = 'A' | 'B' | 'C' | 'other' | null;
+type FlowId = 'headache' | 'fever' | 'breathless' | 'throat' | 'nausea' | 'other' | null;
 type HandoffStage = null | 'connecting' | 'active' | 'ended';
 type UrgencyAction = 'book' | 'handoff' | 'call115';
 
@@ -97,21 +97,38 @@ const URGENCY_MAP: Record<UrgencyLevel, { label: string; cls: string }> = {
 };
 
 const FOLLOW_UP_NONE = 'Không có thêm';
+const OTHER_SYMPTOM = 'Triệu chứng khác...';
+const DEFAULT_CHAT_PLACEHOLDER = 'Mô tả triệu chứng của bạn...';
 
-const TRIAGE_SPECIALTY_MAP: Record<Exclude<FlowId, null>, { specialty?: string; reason: string }> = {
-  A: {
-    specialty: 'Tai Mũi Họng',
-    reason: 'Ho và đau họng là triệu chứng thuộc chuyên khoa Tai Mũi Họng.',
+const TRIAGE_SPECIALTY_MAP: Record<Exclude<FlowId, null>, { specialty?: string; icon: string; reason: string }> = {
+  headache: {
+    specialty: 'Thần kinh',
+    icon: 'brain',
+    reason: 'Đau đầu nên được đánh giá bởi bác sĩ chuyên khoa Thần kinh nếu cần khám thêm.',
   },
-  B: {
+  fever: {
     specialty: 'Nội tổng quát',
+    icon: 'thermometer',
     reason: 'Sốt kéo dài cần được đánh giá bởi bác sĩ Nội tổng quát.',
   },
-  C: {
-    reason: 'Vui lòng đến cơ sở y tế gần nhất hoặc gọi cấp cứu ngay. Không nên tự đặt lịch hẹn thông thường trong trường hợp này.',
+  breathless: {
+    specialty: 'Tim mạch',
+    icon: 'heart',
+    reason: 'Khó thở hoặc tức ngực cần được bác sĩ Tim mạch đánh giá sớm.',
+  },
+  throat: {
+    specialty: 'Tai Mũi Họng',
+    icon: 'ear',
+    reason: 'Ho và đau họng là triệu chứng thuộc chuyên khoa Tai Mũi Họng.',
+  },
+  nausea: {
+    specialty: 'Tiêu hóa',
+    icon: 'stomach',
+    reason: 'Buồn nôn và khó chịu đường tiêu hóa phù hợp để khám chuyên khoa Tiêu hóa.',
   },
   other: {
     specialty: 'Nội tổng quát',
+    icon: 'hospital',
     reason: 'Dựa trên triệu chứng bạn mô tả, bác sĩ Nội tổng quát có thể hỗ trợ ban đầu.',
   },
 };
@@ -135,6 +152,10 @@ function splitExtras(value?: string) {
     .split(',')
     .map((item) => formatSymptom(item))
     .filter(Boolean);
+}
+
+function withOtherSymptom(options: string[]) {
+  return options.includes(OTHER_SYMPTOM) ? options : [...options, OTHER_SYMPTOM];
 }
 
 function truncateText(value: string, max = 100) {
@@ -181,6 +202,7 @@ function getNextMultiSelection(current: string[], option: string) {
 
 function getDoctorNameForSpecialty(specialty?: string) {
   if (specialty === 'Tim mạch') return 'BS. Lê Minh Tuấn';
+  if (specialty === 'Thần kinh') return 'BS. Hoàng Minh Khang';
   if (specialty === 'Nội khoa' || specialty === 'Nội tổng quát') return 'BS. Nguyễn Văn A';
   return 'BS. Nguyễn Văn A';
 }
@@ -198,7 +220,7 @@ function now() {
 let msgCounter = 0;
 function uid() { return `m-${Date.now()}-${++msgCounter}`; }
 
-const INITIAL_BOT_MSG = 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. 🏥\nHôm nay bạn đang gặp vấn đề gì? Hãy chọn triệu chứng chính:';
+const INITIAL_BOT_MSG = 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic.\nHôm nay bạn đang gặp vấn đề gì? Hãy chọn triệu chứng chính:';
 
 const INITIAL_CHIPS: string[] = [
   '🤒 Sốt',
@@ -230,13 +252,13 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     status: 'completed',
     doctorName: 'BS. Nguyễn Văn A',
     specialty: 'Tai Mũi Họng',
-    flow: 'A',
+    flow: 'throat',
     step: 4,
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
       { id: 'h1-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '14:00',
-        chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['🤧 Ho / Đau họng'] } },
+        chips: { options: INITIAL_CHIPS, disabled: true, selected: ['Ho / Đau họng'] } },
       { id: 'h1-2', sender: 'patient', text: 'Ho / Đau họng', time: '14:01' },
       { id: 'h1-3', sender: 'ai', text: 'Bạn bị ho và đau họng từ khi nào?', time: '14:01',
         chips: { options: ['Hôm nay', '1–2 ngày', '3–5 ngày', 'Hơn 1 tuần'], disabled: true, selected: ['1–2 ngày'] } },
@@ -248,7 +270,7 @@ const HISTORY_SESSIONS: ConsultSession[] = [
         chips: { options: ['Không', 'Có dùng thuốc OTC', 'Có đơn thuốc bác sĩ'], disabled: true, selected: ['Không'] } },
       { id: 'h1-8', sender: 'patient', text: 'Không', time: '14:04' },
       { id: 'h1-9', sender: 'system', text: '', time: '14:05',
-        urgency: { level: 'green', summary: 'Mức độ: BÌNH THƯỜNG 🟢', recommendation: 'Các triệu chứng của bạn phù hợp với viêm họng thông thường. Không có dấu hiệu nguy hiểm. Bạn có thể theo dõi tại nhà hoặc đặt lịch khám trong 1–2 ngày tới.', specialty: 'Tai Mũi Họng', specialtyReason: TRIAGE_SPECIALTY_MAP.A.reason } },
+        urgency: { level: 'green', summary: 'Mức độ: BÌNH THƯỜNG', recommendation: 'Các triệu chứng của bạn phù hợp với viêm họng thông thường. Không có dấu hiệu nguy hiểm. Bạn có thể theo dõi tại nhà hoặc đặt lịch khám trong 1–2 ngày tới.', specialty: 'Tai Mũi Họng', specialtyReason: TRIAGE_SPECIALTY_MAP.throat.reason } },
       { id: 'h1-10', sender: 'patient', text: 'Kết nối Bác sĩ', time: '14:06' },
       { id: 'h1-11', sender: 'system', text: 'BS. Nguyễn Văn A đã tham gia cuộc tư vấn', time: '14:07' },
       { id: 'h1-12', sender: 'doctor', text: 'Xin chào bạn, tôi là BS. Nguyễn Văn A. Tôi đã xem qua thông tin triệu chứng bạn mô tả. Bạn có thể cho tôi biết thêm về tình trạng ho không?', time: '14:08' },
@@ -270,13 +292,13 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     status: 'completed',
     doctorName: 'BS. Trần Thị Bình',
     specialty: 'Nội tổng quát',
-    flow: 'B',
+    flow: 'fever',
     step: 4,
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
       { id: 'h2-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '08:50',
-        chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['🤒 Sốt'] } },
+        chips: { options: INITIAL_CHIPS, disabled: true, selected: ['Sốt'] } },
       { id: 'h2-2', sender: 'patient', text: 'Sốt', time: '08:51' },
       { id: 'h2-3', sender: 'ai', text: 'Bạn đang bị sốt. Nhiệt độ cơ thể hiện tại của bạn là bao nhiêu?', time: '08:52',
         chips: { options: ['Dưới 38°C', '38°C – 39°C', 'Trên 39°C', 'Không đo được'], disabled: true, selected: ['38°C – 39°C'] } },
@@ -288,7 +310,7 @@ const HISTORY_SESSIONS: ConsultSession[] = [
         chips: { options: ['Đau đầu', 'Đau cơ', 'Phát ban', 'Buồn nôn', 'Không có thêm'], multiSelect: true, disabled: true, selected: ['Đau đầu', 'Đau cơ'] } },
       { id: 'h2-8', sender: 'patient', text: 'Tôi bị: Đau đầu, Đau cơ', time: '08:55' },
       { id: 'h2-9', sender: 'system', text: '', time: '08:56',
-        urgency: { level: 'yellow', summary: 'Mức độ: CẦN THEO DÕI 🟡', recommendation: 'Triệu chứng sốt kéo dài cần được đánh giá bởi bác sĩ. Khuyến nghị kết nối tư vấn trực tiếp để được hỗ trợ kịp thời.', specialty: 'Nội tổng quát', specialtyReason: TRIAGE_SPECIALTY_MAP.B.reason } },
+        urgency: { level: 'yellow', summary: 'Mức độ: CẦN THEO DÕI', recommendation: 'Triệu chứng sốt kéo dài cần được đánh giá bởi bác sĩ. Khuyến nghị kết nối tư vấn trực tiếp để được hỗ trợ kịp thời.', specialty: 'Nội tổng quát', specialtyReason: TRIAGE_SPECIALTY_MAP.fever.reason } },
       { id: 'h2-10', sender: 'patient', text: 'Kết nối Bác sĩ ngay', time: '08:57' },
       { id: 'h2-11', sender: 'system', text: 'BS. Trần Thị Bình đã tham gia cuộc tư vấn', time: '08:58' },
       { id: 'h2-12', sender: 'doctor', text: 'Xin chào bạn, tôi là BS. Trần Thị Bình. Tôi đã xem qua thông tin triệu chứng. Sốt 3–4 ngày kèm đau cơ cần được theo dõi kỹ. Bạn có bị phát ban hay nổi mẩn đỏ không?', time: '09:00' },
@@ -310,22 +332,22 @@ const HISTORY_SESSIONS: ConsultSession[] = [
     status: 'completed',
     doctorName: 'BS. Lê Minh Tuấn',
     specialty: 'Tim mạch',
-    flow: 'C',
+    flow: 'breathless',
     step: 3,
     handoff: 'ended',
     doctorReplyIndex: 3,
     messages: [
       { id: 'h3-1', sender: 'ai', text: 'Xin chào! Tôi là trợ lý y tế AI của NovaCare Clinic. Hôm nay bạn đang gặp vấn đề gì?', time: '22:30',
-        chips: { options: ['🤒 Sốt', '😮\u200d💨 Khó thở', '🤕 Đau đầu', '🤧 Ho / Đau họng', '🤢 Buồn nôn', '✏️ Khác...'], disabled: true, selected: ['😮\u200d💨 Khó thở'] } },
+        chips: { options: INITIAL_CHIPS, disabled: true, selected: ['Khó thở'] } },
       { id: 'h3-2', sender: 'patient', text: 'Khó thở', time: '22:30' },
-      { id: 'h3-3', sender: 'ai', text: '⚠️ Khó thở là triệu chứng cần được đánh giá ngay.\nMức độ khó thở của bạn như thế nào?', time: '22:31',
+      { id: 'h3-3', sender: 'ai', text: 'Khó thở là triệu chứng cần được đánh giá ngay.\nMức độ khó thở của bạn như thế nào?', time: '22:31',
         chips: { options: ['Hơi khó thở khi vận động', 'Khó thở cả khi nghỉ', 'Rất khó thở, tức ngực'], disabled: true, selected: ['Khó thở cả khi nghỉ'] } },
       { id: 'h3-4', sender: 'patient', text: 'Khó thở cả khi nghỉ', time: '22:32' },
       { id: 'h3-5', sender: 'ai', text: 'Bạn có kèm theo triệu chứng nào sau đây không?', time: '22:32',
         chips: { options: ['Đau tức ngực', 'Môi / đầu ngón tay tím', 'Chóng mặt', FOLLOW_UP_NONE], multiSelect: true, disabled: true, selected: ['Đau tức ngực', 'Chóng mặt'] } },
       { id: 'h3-6', sender: 'patient', text: 'Tôi bị: Đau tức ngực, Chóng mặt', time: '22:33' },
       { id: 'h3-7', sender: 'system', text: '', time: '22:34',
-        urgency: { level: 'red', summary: 'Mức độ: KHẨN CẤP 🔴', recommendation: 'Triệu chứng của bạn có thể nghiêm trọng và cần được xử lý ngay lập tức. Vui lòng kết nối với Bác sĩ ngay hoặc đến cơ sở y tế gần nhất.', emergencyGuide: ['Vui lòng đến cơ sở y tế gần nhất hoặc gọi cấp cứu ngay.', 'Không nên tự đặt lịch hẹn thông thường trong trường hợp này.'] } },
+        urgency: { level: 'red', summary: 'Mức độ: KHẨN CẤP', recommendation: 'Triệu chứng của bạn có thể nghiêm trọng và cần được xử lý ngay lập tức. Vui lòng kết nối với Bác sĩ ngay hoặc đến cơ sở y tế gần nhất.', emergencyGuide: ['Vui lòng đến cơ sở y tế gần nhất hoặc gọi cấp cứu ngay.', 'Không nên tự đặt lịch hẹn thông thường trong trường hợp này.'] } },
       { id: 'h3-8', sender: 'patient', text: 'Kết nối Bác sĩ khẩn cấp', time: '22:34' },
       { id: 'h3-9', sender: 'system', text: 'BS. Lê Minh Tuấn đã tham gia cuộc tư vấn', time: '22:35' },
       { id: 'h3-10', sender: 'doctor', text: 'Xin chào bạn, tôi là BS. Lê Minh Tuấn. Đây là tình huống cần xử lý nhanh. Hiện tại bạn đang ngồi hay nằm? Cơn khó thở bắt đầu từ khi nào?', time: '22:36' },
@@ -354,6 +376,9 @@ export default function PatientConsultation({
   const [showConfirmEnd, setShowConfirmEnd] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [multiSelected, setMultiSelected] = useState<string[]>([]);
+  const [freeTextContext, setFreeTextContext] = useState<'primary' | 'extra' | null>(null);
+  const [chatPlaceholder, setChatPlaceholder] = useState(DEFAULT_CHAT_PLACEHOLDER);
+  const [chatHint, setChatHint] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -363,6 +388,16 @@ export default function PatientConsultation({
   /* ── Auto-scroll ── */
   const scrollToBottom = useCallback(() => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }, []);
+
+  const focusChatInput = useCallback(() => {
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+
+  const resetChatInputContext = useCallback(() => {
+    setFreeTextContext(null);
+    setChatPlaceholder(DEFAULT_CHAT_PLACEHOLDER);
+    setChatHint(null);
   }, []);
 
   useEffect(scrollToBottom, [activeId, isTyping, scrollToBottom]);
@@ -417,6 +452,8 @@ export default function PatientConsultation({
     setSessions((prev) => [session, ...prev]);
     setActiveId(id);
     setMultiSelected([]);
+    setInputValue('');
+    resetChatInputContext();
 
     // Initial bot message
     const botMsg: ChatMessage = {
@@ -442,7 +479,7 @@ export default function PatientConsultation({
         scrollToBottom();
       }, 1200);
     }, 100);
-  }, [scrollToBottom]);
+  }, [resetChatInputContext, scrollToBottom]);
 
   /* ── Handle chip selection ── */
   const handleChipSelect = useCallback(
@@ -466,10 +503,17 @@ export default function PatientConsultation({
       updateSession(sid, (s) => ({ ...s, messages: [...s.messages, patientMsg] }));
       scrollToBottom();
 
+      if (!chipConfig.multiSelect && chip.includes('Khác')) {
+        setFreeTextContext('primary');
+        setChatPlaceholder(DEFAULT_CHAT_PLACEHOLDER);
+        setChatHint(null);
+        focusChatInput();
+      }
+
       // Route to flow
       processChipChoice(sid, chip);
     },
-    [activeSession, updateSession, scrollToBottom],
+    [activeSession, focusChatInput, updateSession, scrollToBottom],
   );
 
   /* ── Process chip choice → route to flow steps ── */
@@ -482,34 +526,47 @@ export default function PatientConsultation({
 
       /* ── INITIAL: No flow yet ── */
       if (!flow) {
-        if (chip.includes('Ho') || chip.includes('Đau họng')) {
-          updateSession(sid, (s) => ({ ...s, flow: 'A', step: 1, title: 'Ho / Đau họng', mainSymptom: 'Ho, đau họng' }));
+        if (chip.includes('Đau đầu')) {
+          updateSession(sid, (s) => ({ ...s, flow: 'headache', step: 1, title: 'Đau đầu', mainSymptom: 'Đau đầu' }));
+          addBotMessage(sid, {
+            sender: 'ai',
+            text: 'Bạn đang bị đau đầu. Cơn đau xuất hiện như thế nào?',
+            chips: { options: ['Đau âm ỉ liên tục', 'Đau theo nhịp đập', 'Đau dữ dội đột ngột', 'Đau nửa đầu'] },
+          });
+        } else if (chip.includes('Ho') || chip.includes('Đau họng')) {
+          updateSession(sid, (s) => ({ ...s, flow: 'throat', step: 1, title: 'Ho / Đau họng', mainSymptom: 'Ho, đau họng' }));
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Bạn bị ho và đau họng từ khi nào?',
             chips: { options: ['Hôm nay', '1–2 ngày', '3–5 ngày', 'Hơn 1 tuần'] },
           });
         } else if (chip.includes('Sốt')) {
-          updateSession(sid, (s) => ({ ...s, flow: 'B', step: 1, title: 'Sốt', mainSymptom: 'Sốt' }));
+          updateSession(sid, (s) => ({ ...s, flow: 'fever', step: 1, title: 'Sốt', mainSymptom: 'Sốt' }));
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Bạn đang bị sốt. Nhiệt độ cơ thể hiện tại của bạn là bao nhiêu?',
             chips: { options: ['Dưới 38°C', '38°C – 39°C', 'Trên 39°C', 'Không đo được'] },
           });
         } else if (chip.includes('Khó thở')) {
-          updateSession(sid, (s) => ({ ...s, flow: 'C', step: 1, title: 'Khó thở', mainSymptom: 'Khó thở' }));
+          updateSession(sid, (s) => ({ ...s, flow: 'breathless', step: 1, title: 'Khó thở', mainSymptom: 'Khó thở' }));
           addBotMessage(sid, {
             sender: 'ai',
-            text: '⚠️ Khó thở là triệu chứng cần được đánh giá ngay.\nMức độ khó thở của bạn như thế nào?',
+            text: 'Khó thở là triệu chứng cần được đánh giá ngay.\nMức độ khó thở của bạn như thế nào?',
             chips: { options: ['Hơi khó thở khi vận động', 'Khó thở cả khi nghỉ', 'Rất khó thở, tức ngực'] },
+          });
+        } else if (chip.includes('Buồn nôn')) {
+          updateSession(sid, (s) => ({ ...s, flow: 'nausea', step: 1, title: 'Buồn nôn', mainSymptom: 'Buồn nôn' }));
+          addBotMessage(sid, {
+            sender: 'ai',
+            text: 'Bạn bị buồn nôn từ khi nào?',
+            chips: { options: ['Hôm nay', '1–2 ngày', '3–5 ngày', 'Hơn 1 tuần'] },
           });
         } else if (chip.includes('Khác')) {
           // Show free text input — do nothing special, user types
           return;
         } else {
-          // Đau đầu, Buồn nôn → go to Flow A from step 2
           const symptom = cleanSymptomText(chip);
-          updateSession(sid, (s) => ({ ...s, flow: 'A', step: 1, title: symptom, mainSymptom: symptom }));
+          updateSession(sid, (s) => ({ ...s, flow: 'other', step: 1, title: symptom, mainSymptom: symptom }));
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Cảm ơn bạn đã mô tả. Để hỗ trợ tốt hơn, bạn có thể cho biết triệu chứng này xuất hiện từ khi nào?',
@@ -519,14 +576,53 @@ export default function PatientConsultation({
         return;
       }
 
-      /* ── FLOW A ── */
-      if (flow === 'A') {
+      /* ── FLOW HEADACHE ── */
+      if (flow === 'headache') {
+        if (step === 1) {
+          updateSession(sid, (s) => ({ ...s, step: 2, mainSymptom: `Đau đầu - ${cleanSymptomText(chip)}` }));
+          addBotMessage(sid, {
+            sender: 'ai',
+            text: 'Bạn đã bị đau đầu từ khi nào?',
+            chips: { options: ['Hôm nay', '1–2 ngày', 'Nhiều ngày', 'Tái phát thường xuyên'] },
+          });
+        } else if (step === 2) {
+          updateSession(sid, (s) => ({ ...s, step: 3, duration: chip }));
+          addBotMessage(sid, {
+            sender: 'ai',
+            text: 'Có kèm theo triệu chứng nào không?',
+            chips: { options: withOtherSymptom(['Buồn nôn', 'Chóng mặt', 'Nhạy cảm với ánh sáng', 'Mờ mắt', 'Tê bì tay chân', FOLLOW_UP_NONE]), multiSelect: true },
+          });
+        } else if (step === 3) {
+          const extras = splitExtras(chip);
+          const needsFollowUp = extras.some((item) => item.includes('Mờ mắt') || item.includes('Tê bì'));
+          const triage = TRIAGE_SPECIALTY_MAP.headache;
+          updateSession(sid, (s) => ({ ...s, step: 4, urgency: needsFollowUp ? 'yellow' : 'green', specialty: triage.specialty, extraSymptoms: extras }));
+          addBotMessage(sid, {
+            sender: 'system',
+            text: '',
+            urgency: {
+              level: needsFollowUp ? 'yellow' : 'green',
+              summary: needsFollowUp ? 'Mức độ: CẦN THEO DÕI' : 'Mức độ: BÌNH THƯỜNG',
+              recommendation: needsFollowUp
+                ? 'Đau đầu kèm mờ mắt hoặc tê bì cần được đánh giá bởi bác sĩ chuyên khoa Thần kinh.'
+                : 'Đau đầu có thể do căng thẳng hoặc mệt mỏi. Theo dõi tại nhà, uống đủ nước và nghỉ ngơi.',
+              specialty: triage.specialty,
+              specialtyReason: needsFollowUp ? 'Đau đầu kèm dấu hiệu thần kinh cần được khám chuyên khoa Thần kinh.' : 'Chuyên khoa đề xuất: Thần kinh nếu bạn muốn khám thêm.',
+            },
+            actions: getUrgencyActions(needsFollowUp ? 'yellow' : 'green'),
+          });
+        }
+        return;
+      }
+
+      /* ── FLOW THROAT / NAUSEA ── */
+      if (flow === 'throat' || flow === 'nausea') {
         if (step === 1) {
           updateSession(sid, (s) => ({ ...s, step: 2, duration: chip }));
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Bạn có kèm theo triệu chứng nào khác không?',
-            chips: { options: ['Sổ mũi', 'Sốt nhẹ', 'Mệt mỏi', FOLLOW_UP_NONE], multiSelect: true },
+            chips: { options: withOtherSymptom(flow === 'nausea' ? ['Đau bụng', 'Tiêu chảy', 'Chóng mặt', FOLLOW_UP_NONE] : ['Sổ mũi', 'Sốt nhẹ', 'Mệt mỏi', FOLLOW_UP_NONE]), multiSelect: true },
           });
         } else if (step === 2) {
           updateSession(sid, (s) => ({ ...s, step: 3, extraSymptoms: splitExtras(chip) }));
@@ -537,16 +633,18 @@ export default function PatientConsultation({
           });
         } else if (step === 3) {
           // Triage result GREEN
-          const triage = TRIAGE_SPECIALTY_MAP.A;
+          const triage = TRIAGE_SPECIALTY_MAP[flow];
           updateSession(sid, (s) => ({ ...s, step: 4, urgency: 'green', specialty: triage.specialty }));
           addBotMessage(sid, {
             sender: 'system',
             text: '',
             urgency: {
               level: 'green',
-              summary: 'Mức độ: BÌNH THƯỜNG 🟢',
+              summary: 'Mức độ: BÌNH THƯỜNG',
               recommendation:
-                'Các triệu chứng của bạn phù hợp với viêm họng thông thường. Không có dấu hiệu nguy hiểm. Bạn có thể theo dõi tại nhà hoặc đặt lịch khám trong 1–2 ngày tới.',
+                flow === 'nausea'
+                  ? 'Triệu chứng buồn nôn hiện chưa có dấu hiệu nguy hiểm. Bạn có thể theo dõi, uống đủ nước và đặt lịch khám nếu triệu chứng kéo dài.'
+                  : 'Các triệu chứng của bạn phù hợp với viêm họng thông thường. Không có dấu hiệu nguy hiểm. Bạn có thể theo dõi tại nhà hoặc đặt lịch khám trong 1–2 ngày tới.',
               specialty: triage.specialty,
               specialtyReason: triage.reason,
             },
@@ -556,16 +654,16 @@ export default function PatientConsultation({
         return;
       }
 
-      /* ── FLOW B ── */
-      if (flow === 'B') {
+      /* ── FLOW FEVER ── */
+      if (flow === 'fever') {
         if (step === 1) {
           if (chip.includes('Trên 39°C')) {
             // Jump to Flow C step 2
-            updateSession(sid, (s) => ({ ...s, flow: 'C', step: 2, title: 'Sốt cao', mainSymptom: 'Sốt trên 39°C' }));
+            updateSession(sid, (s) => ({ ...s, flow: 'breathless', step: 2, title: 'Sốt cao', mainSymptom: 'Sốt trên 39°C' }));
             addBotMessage(sid, {
               sender: 'ai',
-              text: '⚠️ Sốt trên 39°C là triệu chứng cần theo dõi sát.\nBạn có kèm theo triệu chứng nào sau đây không?',
-              chips: { options: ['Đau tức ngực', 'Môi / đầu ngón tay tím', 'Chóng mặt', FOLLOW_UP_NONE], multiSelect: true },
+              text: 'Sốt trên 39°C là triệu chứng cần theo dõi sát.\nBạn có kèm theo triệu chứng nào sau đây không?',
+              chips: { options: withOtherSymptom(['Đau tức ngực', 'Môi / đầu ngón tay tím', 'Chóng mặt', FOLLOW_UP_NONE]), multiSelect: true },
             });
             return;
           }
@@ -580,18 +678,18 @@ export default function PatientConsultation({
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Ngoài sốt, bạn có gặp triệu chứng nào sau đây không?',
-            chips: { options: ['Đau đầu', 'Đau cơ', 'Phát ban', 'Buồn nôn', FOLLOW_UP_NONE], multiSelect: true },
+            chips: { options: withOtherSymptom(['Đau đầu', 'Đau cơ', 'Phát ban', 'Buồn nôn', FOLLOW_UP_NONE]), multiSelect: true },
           });
         } else if (step === 3) {
           // Triage result YELLOW
-          const triage = TRIAGE_SPECIALTY_MAP.B;
+          const triage = TRIAGE_SPECIALTY_MAP.fever;
           updateSession(sid, (s) => ({ ...s, step: 4, urgency: 'yellow', specialty: triage.specialty, extraSymptoms: splitExtras(chip) }));
           addBotMessage(sid, {
             sender: 'system',
             text: '',
             urgency: {
               level: 'yellow',
-              summary: 'Mức độ: CẦN THEO DÕI 🟡',
+              summary: 'Mức độ: CẦN THEO DÕI',
               recommendation:
                 'Triệu chứng sốt kéo dài cần được đánh giá bởi bác sĩ. Khuyến nghị kết nối tư vấn trực tiếp để được hỗ trợ kịp thời.',
               specialty: triage.specialty,
@@ -603,14 +701,14 @@ export default function PatientConsultation({
         return;
       }
 
-      /* ── FLOW C ── */
-      if (flow === 'C') {
+      /* ── FLOW BREATHLESS ── */
+      if (flow === 'breathless') {
         if (step === 1) {
           updateSession(sid, (s) => ({ ...s, step: 2, mainSymptom: cleanSymptomText(chip).toLowerCase().includes('khó thở') ? cleanSymptomText(chip) : `Khó thở ${cleanSymptomText(chip)}` }));
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Bạn có kèm theo triệu chứng nào sau đây không?',
-            chips: { options: ['Đau tức ngực', 'Môi / đầu ngón tay tím', 'Chóng mặt', FOLLOW_UP_NONE], multiSelect: true },
+            chips: { options: withOtherSymptom(['Đau tức ngực', 'Môi / đầu ngón tay tím', 'Chóng mặt', FOLLOW_UP_NONE]), multiSelect: true },
           });
         } else if (step === 2) {
           // Triage result RED
@@ -620,7 +718,7 @@ export default function PatientConsultation({
             text: '',
             urgency: {
               level: 'red',
-              summary: 'Mức độ: KHẨN CẤP 🔴',
+              summary: 'Mức độ: KHẨN CẤP',
               recommendation:
                 'Triệu chứng của bạn có thể nghiêm trọng và cần được xử lý ngay lập tức. Vui lòng kết nối với Bác sĩ ngay hoặc đến cơ sở y tế gần nhất.',
               emergencyGuide: [
@@ -640,7 +738,7 @@ export default function PatientConsultation({
           addBotMessage(sid, {
             sender: 'ai',
             text: 'Bạn có kèm theo triệu chứng nào khác không?',
-            chips: { options: ['Sổ mũi', 'Sốt nhẹ', 'Mệt mỏi', FOLLOW_UP_NONE], multiSelect: true },
+            chips: { options: withOtherSymptom(['Sổ mũi', 'Sốt nhẹ', 'Mệt mỏi', FOLLOW_UP_NONE]), multiSelect: true },
           });
         } else if (step === 2) {
           updateSession(sid, (s) => ({ ...s, step: 3, extraSymptoms: splitExtras(chip) }));
@@ -657,7 +755,7 @@ export default function PatientConsultation({
             text: '',
             urgency: {
               level: 'yellow',
-              summary: 'Mức độ: CẦN THEO DÕI 🟡',
+              summary: 'Mức độ: CẦN THEO DÕI',
               recommendation:
                 'Triệu chứng bạn mô tả cần được bác sĩ đánh giá để xác định nguyên nhân và hướng xử trí phù hợp.',
               specialty: triage.specialty,
@@ -673,15 +771,25 @@ export default function PatientConsultation({
 
   /* ── Handle multi-select confirm ── */
   const handleMultiConfirm = useCallback(
-    (chipConfig: ChipConfig) => {
+    (customSymptom?: string) => {
       if (!activeSession || multiSelected.length === 0) return;
       const sid = activeSession.id;
+      const confirmedSelections = multiSelected
+        .filter((item) => item !== OTHER_SYMPTOM)
+        .concat(
+          multiSelected.includes(OTHER_SYMPTOM) && customSymptom?.trim()
+            ? [formatSymptom(customSymptom)]
+            : [],
+        )
+        .filter(Boolean);
+
+      if (confirmedSelections.length === 0) return;
 
       // Disable chips
       updateSession(sid, (s) => {
         const msgs = s.messages.map((m) => {
           if (m.chips && !m.chips.disabled && m.chips.multiSelect) {
-            return { ...m, chips: { ...m.chips, disabled: true, selected: multiSelected } };
+            return { ...m, chips: { ...m.chips, disabled: true, selected: confirmedSelections } };
           }
           return m;
         });
@@ -689,19 +797,21 @@ export default function PatientConsultation({
       });
 
       // Add patient summary message
-      const summary = multiSelected.length === 1 && multiSelected[0].includes('Không')
-        ? multiSelected[0]
-        : `Tôi bị: ${multiSelected.join(', ')}`;
+      const summary = confirmedSelections.length === 1 && confirmedSelections[0].includes('Không')
+        ? confirmedSelections[0]
+        : `Tôi bị: ${confirmedSelections.join(', ')}`;
       const patientMsg: ChatMessage = { id: uid(), sender: 'patient', text: summary, time: now() };
       updateSession(sid, (s) => ({ ...s, messages: [...s.messages, patientMsg] }));
       scrollToBottom();
 
       setMultiSelected([]);
+      setInputValue('');
+      resetChatInputContext();
 
       // Process next step (use dummy chip to trigger step advance)
       setTimeout(() => processChipChoice(sid, summary), 100);
     },
-    [activeSession, multiSelected, updateSession, scrollToBottom, processChipChoice],
+    [activeSession, multiSelected, processChipChoice, resetChatInputContext, scrollToBottom, updateSession],
   );
 
   /* ── Handle action button clicks ── */
@@ -738,7 +848,7 @@ export default function PatientConsultation({
 
       if (action === 'handoff') {
         const latestTriage = [...activeSession.messages].reverse().find((message) => message.urgency)?.urgency;
-        const handoffSpecialty = latestTriage?.specialty ?? (activeSession.flow === 'C' ? 'Tim mạch' : activeSession.specialty) ?? 'Nội tổng quát';
+        const handoffSpecialty = latestTriage?.specialty ?? (activeSession.flow === 'breathless' ? 'Tim mạch' : activeSession.specialty) ?? 'Nội tổng quát';
         const handoffDoctorName = getDoctorNameForSpecialty(handoffSpecialty);
         // Start handoff sequence
         updateSession(sid, (s) => ({ ...s, handoff: 'connecting', status: 'doctor-chat' }));
@@ -793,7 +903,14 @@ export default function PatientConsultation({
     if (!activeSession || !inputValue.trim()) return;
     const sid = activeSession.id;
     const text = inputValue.trim();
+
+    if (freeTextContext === 'extra') {
+      handleMultiConfirm(text);
+      return;
+    }
+
     setInputValue('');
+    resetChatInputContext();
 
     // Add patient message
     const patientMsg: ChatMessage = { id: uid(), sender: 'patient', text, time: now() };
@@ -834,7 +951,7 @@ export default function PatientConsultation({
         chips: { options: ['Hôm nay', '1–2 ngày', '3–5 ngày', 'Hơn 1 tuần'] },
       });
     }
-  }, [activeSession, inputValue, updateSession, addBotMessage, scrollToBottom]);
+  }, [activeSession, addBotMessage, freeTextContext, handleMultiConfirm, inputValue, resetChatInputContext, scrollToBottom, updateSession]);
 
   /* ── Handle end session ── */
   const handleEndSession = useCallback(() => {
@@ -878,7 +995,7 @@ export default function PatientConsultation({
 
   /* ── Should hide input (chips active and no free input needed) ── */
   const hasActiveChips = activeSession?.messages.some((m) => m.chips && !m.chips.disabled) ?? false;
-  const showFreeInput = !isCompleted && !hasActiveChips;
+  const showFreeInput = !isCompleted && (!hasActiveChips || freeTextContext === 'extra');
   const isInHandoff = activeSession?.handoff === 'active';
 
   return (
@@ -930,7 +1047,12 @@ export default function PatientConsultation({
                 key={session.id}
                 type="button"
                 className={`consult-session-item ${session.id === activeId ? 'consult-session-item--active' : ''}`}
-                onClick={() => { setActiveId(session.id); setMultiSelected([]); }}
+                onClick={() => {
+                  setActiveId(session.id);
+                  setMultiSelected([]);
+                  setInputValue('');
+                  resetChatInputContext();
+                }}
               >
                 <div className="consult-session-top">
                   <span className="consult-session-name">{session.title}</span>
@@ -1102,7 +1224,27 @@ export default function PatientConsultation({
                             onClick={() => {
                               if (isDisabled) return;
                               if (isMulti) {
-                                setMultiSelected((prev) => getNextMultiSelection(prev, opt));
+                                if (opt === OTHER_SYMPTOM) {
+                                  const isRemovingOther = multiSelected.includes(OTHER_SYMPTOM);
+                                  setMultiSelected((prev) => (
+                                    isRemovingOther
+                                      ? prev.filter((item) => item !== OTHER_SYMPTOM)
+                                      : [...prev.filter((item) => item !== FOLLOW_UP_NONE), OTHER_SYMPTOM]
+                                  ));
+                                  if (isRemovingOther) {
+                                    setInputValue('');
+                                    resetChatInputContext();
+                                  } else {
+                                    setFreeTextContext('extra');
+                                    setChatPlaceholder('Nhập triệu chứng kèm theo của bạn...');
+                                    setChatHint('Nhập triệu chứng rồi nhấn gửi để tiếp tục');
+                                    focusChatInput();
+                                  }
+                                  return;
+                                }
+                                setInputValue('');
+                                resetChatInputContext();
+                                setMultiSelected((prev) => getNextMultiSelection(prev.filter((item) => item !== OTHER_SYMPTOM), opt));
                               } else {
                                 handleChipSelect(opt, msg.chips!);
                               }
@@ -1112,16 +1254,6 @@ export default function PatientConsultation({
                           </button>
                         );
                       })}
-                      {msg.chips.multiSelect && !msg.chips.disabled && multiSelected.length > 0 ? (
-                        <button
-                          type="button"
-                          className="chat-chip-confirm"
-                          onClick={() => handleMultiConfirm(msg.chips!)}
-                        >
-                          <Check size={14} />
-                          Xác nhận
-                        </button>
-                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -1150,30 +1282,49 @@ export default function PatientConsultation({
               Phiên tư vấn đã kết thúc
             </div>
           ) : showFreeInput || isInHandoff ? (
-            <div className="consult-input-bar">
-              <textarea
-                ref={inputRef}
-                className="consult-input"
-                rows={1}
-                placeholder={isInHandoff ? 'Nhập tin nhắn cho bác sĩ...' : 'Mô tả triệu chứng của bạn...'}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                disabled={isTyping}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-              />
+            <>
+              {chatHint ? (
+                <div className="chat-hint" role="status">
+                  <Info size={12} />
+                  <span>{chatHint}</span>
+                </div>
+              ) : null}
+              <div className="consult-input-bar">
+                <textarea
+                  ref={inputRef}
+                  className="consult-input"
+                  rows={1}
+                  placeholder={isInHandoff ? 'Nhập tin nhắn cho bác sĩ...' : chatPlaceholder}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  disabled={isTyping}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="consult-send-btn"
+                  disabled={!inputValue.trim() || isTyping}
+                  aria-label="Gửi tin nhắn"
+                  onClick={handleSend}
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+            </>
+          ) : multiSelected.length > 0 ? (
+            <div className="consult-selection-footer">
               <button
                 type="button"
-                className="consult-send-btn"
-                disabled={!inputValue.trim() || isTyping}
-                aria-label="Gửi tin nhắn"
-                onClick={handleSend}
+                className="consult-selection-continue"
+                onClick={() => handleMultiConfirm()}
               >
-                <Send size={18} />
+                Tiếp tục
+                <ChevronRight size={16} />
               </button>
             </div>
           ) : (

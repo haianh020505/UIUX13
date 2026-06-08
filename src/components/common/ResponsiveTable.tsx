@@ -1,23 +1,38 @@
 import type { ReactNode } from 'react';
 
-export default function ResponsiveTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
+export default function ResponsiveTable({
+  columns,
+  rows,
+  colWidths,
+}: {
+  columns: string[];
+  rows: ReactNode[][];
+  colWidths?: Array<string | undefined>;
+}) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full table-fixed text-left text-sm">
-        <thead className="border-b border-slate-200 text-xs font-extrabold uppercase text-slate-500">
+      <table className="data-table min-w-full text-left text-sm">
+        {colWidths ? (
+          <colgroup>
+            {columns.map((column, index) => (
+              <col key={column} style={colWidths[index] ? { width: colWidths[index] } : undefined} />
+            ))}
+          </colgroup>
+        ) : null}
+        <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column} className="px-4 py-3">
+              <th key={column}>
                 {column}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody>
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex} className="bg-white">
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} className="px-4 py-3 align-middle text-slate-600">
+                <td key={cellIndex} className="align-middle">
                   {cell}
                 </td>
               ))}

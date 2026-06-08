@@ -62,7 +62,31 @@ export function getPatient(code: string) {
   return patients.find((patient) => patient.code === code) ?? patients[0];
 }
 
+export function hasRecordedAllergy(allergy?: string | null) {
+  const normalizedAllergy = normalizeAllergyText(allergy ?? '');
+  if (!normalizedAllergy) return false;
+
+  return ![
+    'khong ghi nhan',
+    'chua ghi nhan',
+    'khong co',
+    'khong phat hien',
+    'none',
+    'no known',
+    'nka',
+  ].some((phrase) => normalizedAllergy.includes(phrase));
+}
+
 function getAge(birthDate: string) {
   const year = Number(birthDate.split('/')[2]);
   return Number.isFinite(year) ? 2026 - year : 0;
+}
+
+function normalizeAllergyText(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase('vi-VN')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
 }

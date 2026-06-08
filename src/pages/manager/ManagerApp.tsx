@@ -16,7 +16,7 @@ import ReportsAnalyticsManagement from './ReportsAnalyticsManagement';
 import StaffCoordinationManagement from './StaffCoordinationManagement';
 import PersonnelManagement from './PersonnelManagement';
 import { managerMenu } from './data';
-import type { ClinicTab, ManagerPage } from './types';
+import type { ClinicTab, ManagerPage, OperationStatus } from './types';
 
 export default function ManagerApp() {
   const navigate = useNavigate();
@@ -26,6 +26,7 @@ export default function ManagerApp() {
   const [resetKey, setResetKey] = useState(0);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [operationStatus, setOperationStatus] = useState<OperationStatus>('Mở cửa hoạt động');
 
   const notify = (message: string) => {
     setToast({ id: Date.now(), message });
@@ -164,14 +165,24 @@ export default function ManagerApp() {
       <div className="min-w-0 flex-1 lg:ml-60">
         <ManagerHeader
           activeLabel={activeLabel}
+          operationStatus={operationStatus}
           onOpenMenu={() => setMobileOpen(true)}
           onNotificationClick={openNotificationTarget}
           onLogout={() => setConfirmLogout(true)}
           onOpenAccount={openAccount}
         />
-        <section className="mx-auto max-w-[1180px] px-4 py-3 sm:px-5 lg:px-6">
-          {page === 'dashboard' ? <ManagerDashboard onOpenStaffSchedule={openStaffSchedule} /> : null}
-          {page === 'clinic' ? <ClinicManagement key={`clinic-${resetKey}`} activeTab={activeTab} onTabChange={openClinicTab} onNotify={notify} /> : null}
+        <section className="page-content">
+          {page === 'dashboard' ? <ManagerDashboard onOpenStaffSchedule={openStaffSchedule} onNotify={notify} /> : null}
+          {page === 'clinic' ? (
+            <ClinicManagement
+              key={`clinic-${resetKey}`}
+              activeTab={activeTab}
+              operationStatus={operationStatus}
+              onOperationStatusChange={setOperationStatus}
+              onTabChange={openClinicTab}
+              onNotify={notify}
+            />
+          ) : null}
           {page === 'schedule' ? <AppointmentManagement key={`schedule-${resetKey}`} onNotify={notify} /> : null}
           {page === 'records' ? <PatientRecordsManagement key={`records-${resetKey}`} onNotify={notify} /> : null}
           {page === 'personnel' ? <PersonnelManagement key={`personnel-${resetKey}`} onNotify={notify} /> : null}

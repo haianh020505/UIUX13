@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Wrench } from 'lucide-react';
 
 type AuthStep = 'login' | 'register' | 'registerSuccess' | 'forgot' | 'otp' | 'resetPassword';
-type UserRole = 'PATIENT' | 'DOCTOR' | 'EXPERT' | 'ADMIN';
+type UserRole = 'PATIENT' | 'DOCTOR' | 'ADMIN';
 
 type MockUser = {
   role: UserRole;
@@ -18,8 +18,8 @@ const slides = [
     image: import.meta.env.BASE_URL + 'images/slide-1.png',
   },
   {
-    title: 'Đội ngũ chuyên gia hàng đầu',
-    description: 'Kết nối bệnh nhân với bác sĩ và chuyên gia phù hợp theo từng nhu cầu chăm sóc.',
+    title: 'Đội ngũ y tế hàng đầu',
+    description: 'Kết nối bệnh nhân với bác sĩ phù hợp theo từng nhu cầu chăm sóc.',
     image: import.meta.env.BASE_URL + 'images/slide-2.png',
   },
   {
@@ -42,12 +42,6 @@ const mockAccounts: Record<string, MockUser & { password: string }> = {
     name: 'BS. Nguyễn Văn A',
     route: '/doctor-dashboard',
   },
-  'chuyengia@test.com': {
-    password: '123456',
-    role: 'EXPERT',
-    name: 'PGS.TS Trần Văn B',
-    route: '/expert-dashboard',
-  },
   'admin@test.com': {
     password: '123456',
     role: 'ADMIN',
@@ -59,7 +53,6 @@ const mockAccounts: Record<string, MockUser & { password: string }> = {
 const devRoles: Array<{ label: string; user: MockUser }> = [
   { label: 'Vào Role Bệnh nhân', user: { role: 'PATIENT', name: 'Lê Nguyễn Công Minh', route: '/patient-dashboard' } },
   { label: 'Vào Role Bác sĩ', user: { role: 'DOCTOR', name: 'BS. Nguyễn Văn A', route: '/doctor-dashboard' } },
-  { label: 'Vào Role Chuyên gia', user: { role: 'EXPERT', name: 'PGS.TS Trần Văn B', route: '/expert-dashboard' } },
   { label: 'Vào Role Quản lý', user: { role: 'ADMIN', name: 'Quản trị viên', route: '/admin-dashboard' } },
 ];
 
@@ -85,7 +78,7 @@ function AuthSlider() {
 
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % slides.length);
-    }, 5000);
+    }, 3000);
 
     return () => window.clearInterval(timer);
   }, [isPaused]);
@@ -274,7 +267,7 @@ function AuthFlow() {
   }, [countdown, step]);
 
   return (
-    <section className="flex h-screen w-full items-center justify-center overflow-y-auto bg-[#f4f7fa] px-5 py-10 md:w-1/2 lg:px-12">
+    <section className="flex min-h-screen w-full items-center justify-center overflow-y-auto bg-[#f4f7fa] px-5 py-6 md:h-screen md:min-h-0 md:w-1/2 md:overflow-hidden md:py-4 lg:px-10">
       {step === 'login' ? (
         <LoginCard
           identifier={identifier}
@@ -394,7 +387,7 @@ function LoginCard({
     <AuthCard>
       <CardHeader title="Đăng nhập hệ thống" subtitle="Chào mừng bạn quay lại" />
 
-      <form onSubmit={onSubmit} className="mt-10 space-y-4">
+      <form onSubmit={onSubmit} className="mt-7 space-y-3">
         <FieldLabel label="Email hoặc Số điện thoại">
           <input
             value={identifier}
@@ -417,7 +410,7 @@ function LoginCard({
               onToggle={onTogglePassword}
             />
           </FieldLabel>
-          <div className="mt-3 flex justify-end">
+          <div className="mt-2 flex justify-end">
             <button type="button" onClick={onForgot} className="text-xs font-bold text-brand transition hover:text-[#1f7fb9]">
               Quên mật khẩu?
             </button>
@@ -426,12 +419,12 @@ function LoginCard({
 
         {error ? <p className="text-sm font-semibold text-red-500">{error}</p> : null}
 
-        <button type="submit" className="primary-button mt-7">
+        <button type="submit" className="primary-button mt-5">
           Đăng nhập
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#73829b]">
+      <p className="mt-4 text-center text-sm text-[#73829b]">
         Chưa có tài khoản?{' '}
         <button type="button" onClick={onRegister} className="font-bold text-brand transition hover:text-[#1f7fb9]">
           Đăng ký ngay
@@ -488,7 +481,7 @@ function RegisterCard({
     <AuthCard highlighted>
       <CardHeader title="Tạo tài khoản mới" subtitle="Điền thông tin dưới đây để tham gia hệ thống" />
 
-      <form onSubmit={onSubmit} className="mt-9 space-y-4">
+      <form onSubmit={onSubmit} className="mt-6 space-y-3">
         <RequiredField label="Họ và tên">
           <input
             value={fullName}
@@ -500,7 +493,7 @@ function RegisterCard({
           />
         </RequiredField>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <RequiredField label="Số điện thoại">
             <input
               value={phone}
@@ -571,7 +564,7 @@ function RegisterCard({
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#73829b]">
+      <p className="mt-4 text-center text-sm text-[#73829b]">
         Đã có tài khoản?{' '}
         <button type="button" onClick={onLogin} className="font-bold text-brand transition hover:text-[#1f7fb9]">
           Đăng nhập
@@ -807,9 +800,15 @@ function AuthCard({
   highlighted?: boolean;
   compact?: boolean;
 }) {
+  const sizeClass = compact
+    ? 'max-w-md px-6 py-8 md:px-8'
+    : 'max-w-[460px] px-6 py-7 md:px-8 md:py-8';
+
   return (
     <div
-      className={`w-full max-w-lg rounded-2xl bg-white px-8 py-12 shadow-sm transition md:px-10 ${highlighted ? 'border-4 border-brand' : 'border border-white'}`}
+      className={`w-full rounded-2xl bg-white shadow-sm transition ${sizeClass} ${
+        highlighted ? 'border-4 border-brand' : 'border border-white'
+      }`}
     >
       {children}
     </div>
@@ -828,7 +827,7 @@ function CardHeader({
   return (
     <div className="text-center">
       <h1 className="text-2xl font-extrabold text-[#252f3f]">{title}</h1>
-      <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#73829b]">{subtitle}</p>
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-5 text-[#73829b]">{subtitle}</p>
       {strongSubtitle ? <p className="mt-2 text-sm font-extrabold text-[#252f3f]">{strongSubtitle}</p> : null}
     </div>
   );
@@ -837,7 +836,7 @@ function CardHeader({
 function FieldLabel({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#334155]">{label}</span>
+      <span className="mb-1.5 block text-sm font-bold text-[#334155]">{label}</span>
       {children}
     </label>
   );
@@ -846,7 +845,7 @@ function FieldLabel({ label, children }: { label: string; children: React.ReactN
 function RequiredField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#334155]">
+      <span className="mb-1.5 block text-sm font-bold text-[#334155]">
         {label} <span className="text-red-500">*</span>
       </span>
       {children}
@@ -903,8 +902,8 @@ function BackToLoginButton({ onClick, className = '' }: { onClick: () => void; c
 
 function DevTools({ onChooseRole }: { onChooseRole: (user: MockUser) => void }) {
   return (
-    <div className="mt-7 rounded-lg border border-dashed border-gray-300 bg-gray-50/70 p-4">
-      <p className="mb-3 flex items-center justify-center gap-2 text-sm font-bold text-[#334155]">
+    <div className="mt-5 rounded-lg border border-dashed border-gray-300 bg-gray-50/70 p-3">
+      <p className="mb-2 flex items-center justify-center gap-2 text-sm font-bold text-[#334155]">
         <Wrench size={15} />
         Dev Tools: Test Roles
       </p>
@@ -914,7 +913,7 @@ function DevTools({ onChooseRole }: { onChooseRole: (user: MockUser) => void }) 
             key={role.user.role}
             type="button"
             onClick={() => onChooseRole(role.user)}
-            className="rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 transition hover:border-brand/40 hover:bg-brand/5 hover:text-brand"
+            className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 transition hover:border-brand/40 hover:bg-brand/5 hover:text-brand"
           >
             {role.label}
           </button>

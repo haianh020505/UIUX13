@@ -1,7 +1,9 @@
-import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock3, Edit3, Mail, Plus, Save, Search, Send, Smartphone, Trash2, X, XCircle } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock3, Mail, Pencil, Plus, Save, Search, Send, Smartphone, Trash2, X, XCircle } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import ConfirmDialog from './components/ConfirmDialog';
 import Field from './components/Field';
+import SharedPagination from '../../components/common/Pagination';
+import useDynamicPageSize from '../../components/common/useDynamicPageSize';
 
 type NotificationTab = 'config' | 'manual' | 'history';
 type ReminderOffset = '24h' | '2h';
@@ -263,7 +265,7 @@ function ConfigTab({
                     <Send size={16} />
                   </button>
                   <button type="button" onClick={() => setEditingTemplate(template)} className="icon-button h-9 w-9" aria-label={`Sửa ${template.title}`}>
-                    <Edit3 size={16} />
+                    <Pencil size={16} />
                   </button>
                   <button type="button" onClick={() => setDeleteTemplate(template)} className="icon-button h-9 w-9 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500" aria-label={`Xóa ${template.title}`}>
                     <Trash2 size={16} />
@@ -540,7 +542,7 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [resendItem, setResendItem] = useState<HistoryItem | null>(null);
-  const pageSize = 2;
+  const pageSize = useDynamicPageSize(5);
 
   const filteredHistory = useMemo(() => {
     return history.filter((item) => {
@@ -612,7 +614,7 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
         ) : null}
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full table-fixed text-left text-sm">
+        <table className="data-table min-w-full text-left text-sm">
           <colgroup>
             <col style={{width:'140px'}} />
             <col style={{width:'150px'}} />
@@ -659,43 +661,7 @@ function HistoryTab({ history, onNotify }: { history: HistoryItem[]; onNotify?: 
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between border-t border-slate-100 p-4">
-        <p className="text-sm font-semibold text-slate-500">
-          Hiển thị {pagedHistory.length} trên tổng số {filteredHistory.length} thông báo
-        </p>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            disabled={page === 1}
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-sky-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Trang trước"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-            <button
-              key={pageNumber}
-              type="button"
-              onClick={() => setPage(pageNumber)}
-              className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-extrabold transition ${
-                page === pageNumber ? 'bg-brand text-white shadow-sm' : 'text-brand hover:bg-sky-50'
-              }`}
-            >
-              {pageNumber}
-            </button>
-          ))}
-          <button
-            type="button"
-            disabled={page === totalPages}
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            className="flex h-8 w-8 items-center justify-center rounded text-slate-400 transition hover:bg-sky-50 hover:text-brand disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Trang sau"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      </div>
+      <SharedPagination page={page} totalPages={totalPages} total={filteredHistory.length} pageSize={pageSize} unit="thông báo" onChange={setPage} />
       {resendItem ? (
         <ConfirmDialog
           title="Gửi lại thông báo?"

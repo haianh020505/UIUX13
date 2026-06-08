@@ -164,10 +164,11 @@ export default function PatientDashboardHome({
           <h2 className="text-sm font-bold text-slate-800">Cẩm nang y tế &amp; Sức khỏe</h2>
           <button
             type="button"
-            className="text-sm font-bold text-brand hover:text-[#1f7fb9] transition"
+            className="inline-flex items-center gap-1 text-sm font-bold text-brand transition hover:text-[#1f7fb9]"
             onClick={() => onNavigate('articles')}
           >
-            Xem thêm &gt;
+            Xem thêm
+            <ChevronRight size={16} />
           </button>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

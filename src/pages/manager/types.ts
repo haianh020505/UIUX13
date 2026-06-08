@@ -1,5 +1,6 @@
 export type ClinicTab = 'info' | 'specialties' | 'services' | 'reviews';
 export type ManagerPage = 'dashboard' | 'clinic' | 'schedule' | 'records' | 'personnel' | 'staff' | 'notifications' | 'reports' | 'account';
+export type OperationStatus = 'Mở cửa hoạt động' | 'Đóng cửa bảo trì';
 export type ShiftRoleFilterId = 'all' | 'doctor' | 'nurse' | 'technician' | 'receptionist';
 export type ShiftStatus = 'Vắng mặt' | 'Đi muộn' | 'Chưa đến ca' | 'Đang trực' | 'Nghỉ phép';
 

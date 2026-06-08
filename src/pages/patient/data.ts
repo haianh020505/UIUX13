@@ -254,17 +254,17 @@ export const initialAppointments: AppointmentData[] = [
 
 /* ── Specialty Options (Wizard Step 1) ── */
 export const specialtyOptions: SpecialtyOption[] = [
-  { id: 'sp-general', icon: '🏥', name: 'Nội tổng quát', doctorCount: 2 },
-  { id: 'sp-ent', icon: '👂', name: 'Tai Mũi Họng', doctorCount: 3 },
-  { id: 'sp-cardio', icon: '❤️', name: 'Tim mạch', doctorCount: 2 },
-  { id: 'sp-pediatrics', icon: '👶', name: 'Nhi khoa', doctorCount: 2 },
-  { id: 'sp-gastro', icon: '🫁', name: 'Tiêu hóa', doctorCount: 1 },
-  { id: 'sp-dental', icon: '🦷', name: 'Răng Hàm Mặt', doctorCount: 1 },
-  { id: 'sp-derma', icon: '🧴', name: 'Da liễu', doctorCount: 1 },
-  { id: 'sp-ortho', icon: '🦴', name: 'Cơ xương khớp', doctorCount: 1 },
-  { id: 'sp-eyes', icon: '👁️', name: 'Chuyên khoa Mắt', doctorCount: 1 },
-  { id: 'sp-pulmo', icon: '🫁', name: 'Hô hấp - Phổi', doctorCount: 1 },
-  { id: 'sp-neuro', icon: '🧠', name: 'Thần kinh', doctorCount: 1 },
+  { id: 'sp-general', icon: '', name: 'Nội tổng quát', doctorCount: 2 },
+  { id: 'sp-ent', icon: '', name: 'Tai Mũi Họng', doctorCount: 3 },
+  { id: 'sp-cardio', icon: '', name: 'Tim mạch', doctorCount: 2 },
+  { id: 'sp-pediatrics', icon: '', name: 'Nhi khoa', doctorCount: 2 },
+  { id: 'sp-gastro', icon: '', name: 'Tiêu hóa', doctorCount: 1 },
+  { id: 'sp-dental', icon: '', name: 'Răng Hàm Mặt', doctorCount: 1 },
+  { id: 'sp-derma', icon: '', name: 'Da liễu', doctorCount: 1 },
+  { id: 'sp-ortho', icon: '', name: 'Cơ xương khớp', doctorCount: 1 },
+  { id: 'sp-eyes', icon: '', name: 'Chuyên khoa Mắt', doctorCount: 1 },
+  { id: 'sp-pulmo', icon: '', name: 'Hô hấp - Phổi', doctorCount: 1 },
+  { id: 'sp-neuro', icon: '', name: 'Thần kinh', doctorCount: 1 },
 ];
 
 /* ── Doctor Options (Wizard Step 2) ── */
